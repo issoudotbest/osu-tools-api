@@ -1,0 +1,22 @@
+{
+    "auth": {
+        "api_keys": ["your-secret-key-here"]
+    },
+    "general": {
+        "mode": "development",
+        "public_api_port": 3000,
+        "private_api_port": 3001,
+        "api_prefix": "/api",
+        "grpc_socket_path": "/tmp/osu-tools-calc.sock",
+        "reqs_per_min": 60
+    },
+    "cache": {
+        "path": "./cache",
+        "ttl_days": 1
+    },
+    "urls": {
+        "webhook": "",
+        "webhook_token": "",
+        "loki": ""
+    }
+}

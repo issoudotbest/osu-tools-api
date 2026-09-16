@@ -1,0 +1,17 @@
+{
+    "exclude": ["node_modules", "scripts/", "references/"],
+    "include": ["src/**/*", "test/**/*"],
+    "compilerOptions": {
+        "target": "es2023",
+        "lib": ["ES2023"],
+        "module": "commonjs",
+        "resolveJsonModule": true,
+        "rootDir": ".",
+        "outDir": "build",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "skipLibCheck": true
+    }
+}

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>12.0</LangVersion>
+        <Nullable>enable</Nullable>
+        <GenerateAssemblyInfo Condition="'$(Configuration)'=='Debug'">false</GenerateAssemblyInfo>
+        <NoWarn Condition="'$(Configuration)'=='Debug'">$(NoWarn);CA1416</NoWarn>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <SatelliteResourceLanguages>;</SatelliteResourceLanguages>
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">linux-x64</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Protobuf Include="..\proto\calculator.proto" GrpcServices="Server" ProtoRoot="..\proto\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.67.0" />
+        <PackageReference Include="ppy.osu.Game" Version="2026.702.1" />
+        <PackageReference Include="ppy.osu.Game.Rulesets.Osu" Version="2026.702.1" />
+        <PackageReference Include="ppy.osu.Game.Rulesets.Taiko" Version="2026.702.1" />
+        <PackageReference Include="ppy.osu.Game.Rulesets.Catch" Version="2026.702.1" />
+        <PackageReference Include="ppy.osu.Game.Rulesets.Mania" Version="2026.702.1" />
+    </ItemGroup>
+
+</Project>

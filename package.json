@@ -1,0 +1,47 @@
+{
+    "name": "osu-tools-api",
+    "version": "1.0.0",
+    "description": "Wrapper around osu-tools that exposes an API for accurate PP and beatmap attribute calculations",
+    "main": "src/main.ts",
+    "scripts": {
+        "start": "node build/src/main.js",
+        "start-prod": "node src/main.js",
+        "build": "rm -rf build/ && npm run build:cs && npm run proto:gen && npm run build:ts",
+        "build:cs": "dotnet publish -c Release ./OsuToolsService/OsuToolsService.csproj",
+        "build:ts": "npx tsc",
+        "proto:gen": "bash scripts/proto-gen.sh",
+        "dev": "ts-node-dev src/main.ts",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "test:cs": "dotnet test OsuToolsService.Tests/OsuToolsService.Tests.csproj"
+    },
+    "license": "BSD-3-Clause",
+    "dependencies": {
+        "@grpc/grpc-js": "^1.12.0",
+        "@grpc/proto-loader": "^0.7.13",
+        "cors": "^2.8.5",
+        "express": "^5.2.1",
+        "express-rate-limit": "^8.7.0",
+        "node-cache": "^5.1.2",
+        "prom-client": "^15.1.3",
+        "response-time": "^2.3.4",
+        "undici": "^8.10.2",
+        "winston": "3.19",
+        "winston-loki": "^6.1.7",
+        "zod": "^4.6.5"
+    },
+    "devDependencies": {
+        "@jest/globals": "^30.5.1",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/node": "^26.5.1",
+        "@types/response-time": "^2.3.9",
+        "@types/supertest": "^6.0.0",
+        "jest": "^30.5.1",
+        "supertest": "^7.2.2",
+        "ts-jest": "^29.4.12",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^6.0.3"
+    }
+}

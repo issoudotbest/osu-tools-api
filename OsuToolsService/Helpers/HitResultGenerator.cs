@@ -1,0 +1,523 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using osu.Game.Beatmaps;
+using osu.Game.Rulesets;
+using osu.Game.Rulesets.Mods;
+using osu.Game.Rulesets.Osu;
+using osu.Game.Rulesets.Osu.Mods;
+using osu.Game.Rulesets.Osu.Objects;
+using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.Catch;
+using osu.Game.Rulesets.Catch.Objects;
+using osu.Game.Rulesets.Mania;
+using osu.Game.Rulesets.Mania.Objects;
+using osu.Game.Rulesets.Taiko;
+
+namespace OsuToolsService.Helpers;
+
+/// <summary>
+/// Generates hit statistics for each ruleset based on accuracy, misses, and other parameters.
+/// The osu! framework does not provide reverse accuracy-to-statistics conversion, so this
+/// logic is ported from osu-tools' SimulateCommand subclasses with additional handling for
+/// edge cases (clamping, nested slider accuracy, mania low-accuracy) needed for a public API.
+/// </summary>
+public static class HitResultGenerator
+{
+    public static Dictionary<HitResult, int> Generate(Ruleset ruleset, IBeatmap beatmap, Mod[] mods, double accuracy, int misses,
+        int? mehs, int? goods, int? oks, int? greats, int largeTickMisses, int sliderTailMisses,
+        int? tinyDroplets, int? droplets)
+    {
+        return ruleset switch
+        {
+            OsuRuleset => generateOsu(beatmap, mods, accuracy / 100, misses, mehs, goods, largeTickMisses, sliderTailMisses),
+            TaikoRuleset => generateTaiko(beatmap, accuracy / 100, misses, goods),
+            CatchRuleset => generateCatch(beatmap, accuracy / 100, misses, tinyDroplets, droplets),
+            ManiaRuleset => generateMania(beatmap, mods, accuracy / 100, misses, mehs, oks, goods, greats),
+            _ => throw new ArgumentException($"Unknown ruleset: {ruleset.GetType().Name}")
+        };
+    }
+
+    public static double GetAccuracy(Ruleset ruleset, IBeatmap beatmap, Dictionary<HitResult, int> statistics, Mod[] mods)
+    {
+        return ruleset switch
+        {
+            OsuRuleset => getOsuAccuracy(beatmap, statistics),
+            TaikoRuleset => getTaikoAccuracy(statistics),
+            CatchRuleset => getCatchAccuracy(statistics),
+            ManiaRuleset => getManiaAccuracy(statistics, mods),
+            _ => 0
+        };
+    }
+
+    // === osu! standard ===
+
+    private static Dictionary<HitResult, int> generateOsu(IBeatmap beatmap, Mod[] mods, double accuracy, int countMiss,
+        int? countMeh, int? countGood, int? countLargeTickMisses, int? countSliderTailMisses)
+    {
+        int totalResultCount = beatmap.HitObjects.Count;
+
+        countMiss = Math.Clamp(countMiss, 0, totalResultCount);
+        accuracy = Math.Clamp(accuracy, 0, 1);
+
+        bool isClassic = mods.OfType<OsuModClassic>().Any(m => m.NoSliderHeadAccuracy.Value);
+
+        int totalLargeTicks = 0;
+        int totalSliderEnds = 0;
+        int largeTickMisses = 0;
+        int sliderTailMisses = 0;
+
+        double objectAccuracy = accuracy;
+
+        if (!isClassic)
+        {
+            foreach (var hitObject in beatmap.HitObjects)
+            {
+                if (hitObject is Slider)
+                    totalSliderEnds++;
+
+                foreach (var nested in hitObject.NestedHitObjects)
+                {
+                    if (nested is SliderTick or SliderRepeat)
+                        totalLargeTicks++;
+                }
+            }
+
+            largeTickMisses = Math.Clamp(countLargeTickMisses ?? 0, 0, totalLargeTicks);
+            sliderTailMisses = Math.Clamp(countSliderTailMisses ?? 0, 0, totalSliderEnds);
+
+            if (countMeh == null && countGood == null)
+            {
+                double objectMaximum = 6.0 * totalResultCount;
+                double nestedMaximum = 0.6 * totalLargeTicks + 3.0 * totalSliderEnds;
+                double nestedEarned = 0.6 * (totalLargeTicks - largeTickMisses) + 3.0 * (totalSliderEnds - sliderTailMisses);
+
+                double totalMaximum = objectMaximum + nestedMaximum;
+                double targetTotalPoints = accuracy * totalMaximum;
+                double requiredObjectPoints = targetTotalPoints - nestedEarned;
+
+                objectAccuracy = objectMaximum > 0 ? Math.Clamp(requiredObjectPoints / objectMaximum, 0, 1) : 1;
+            }
+        }
+
+        int countGreat;
+
+        if (countMeh != null || countGood != null)
+        {
+            int totalSpecified = countMiss + (countGood ?? 0) + (countMeh ?? 0);
+            if (totalSpecified > totalResultCount)
+            {
+                int overflow = totalSpecified - totalResultCount;
+                // Reduce the largest specified counts first to avoid negative greats
+                if ((countGood ?? 0) >= (countMeh ?? 0) && (countGood ?? 0) >= overflow)
+                    countGood = Math.Max(0, countGood!.Value - overflow);
+                else if ((countMeh ?? 0) >= overflow)
+                    countMeh = Math.Max(0, countMeh!.Value - overflow);
+                else
+                {
+                    int remaining = overflow - (countMeh ?? 0);
+                    countMeh = 0;
+                    countGood = Math.Max(0, (countGood ?? 0) - remaining);
+                }
+            }
+            countGreat = totalResultCount - (countGood ?? 0) - (countMeh ?? 0) - countMiss;
+        }
+        else
+        {
+            int relevantResultCount = totalResultCount - countMiss;
+            double relevantAccuracy = relevantResultCount == 0 ? 0 : objectAccuracy * totalResultCount / relevantResultCount;
+            relevantAccuracy = Math.Clamp(relevantAccuracy, 0, 1);
+
+            if (relevantAccuracy >= 0.25)
+            {
+                double ratio50To100 = Math.Pow(1 - (relevantAccuracy - 0.25) / 0.75, 2);
+                double count100Estimate = 6 * relevantResultCount * (1 - relevantAccuracy) / (5 * ratio50To100 + 4);
+                double count50Estimate = count100Estimate * ratio50To100;
+                countGood = (int?)Math.Round(count100Estimate);
+                countMeh = (int?)(Math.Round(count100Estimate + count50Estimate) - countGood);
+            }
+            else if (relevantAccuracy >= 1.0 / 6)
+            {
+                double count100Estimate = 6 * relevantResultCount * relevantAccuracy - relevantResultCount;
+                double count50Estimate = relevantResultCount - count100Estimate;
+                countGood = (int?)Math.Round(count100Estimate);
+                countMeh = (int?)(Math.Round(count100Estimate + count50Estimate) - countGood);
+            }
+            else
+            {
+                double count50Estimate = 6 * relevantResultCount * relevantAccuracy;
+                countGood = 0;
+                countMeh = (int?)Math.Round(count50Estimate);
+                countMiss = (int)(totalResultCount - countMeh);
+            }
+
+            countGreat = (int)(totalResultCount - countGood - countMeh - countMiss);
+        }
+
+        var result = new Dictionary<HitResult, int>
+        {
+            { HitResult.Great, countGreat },
+            { HitResult.Ok, countGood ?? 0 },
+            { HitResult.Meh, countMeh ?? 0 },
+            { HitResult.Miss, countMiss }
+        };
+
+        if (!isClassic)
+        {
+            result[HitResult.LargeTickHit] = totalLargeTicks - largeTickMisses;
+            result[HitResult.LargeTickMiss] = largeTickMisses;
+            result[HitResult.SliderTailHit] = totalSliderEnds - sliderTailMisses;
+        }
+
+        return result;
+    }
+
+    private static double getOsuAccuracy(IBeatmap beatmap, Dictionary<HitResult, int> statistics)
+    {
+        statistics.TryGetValue(HitResult.Great, out int countGreat);
+        statistics.TryGetValue(HitResult.Ok, out int countGood);
+        statistics.TryGetValue(HitResult.Meh, out int countMeh);
+        statistics.TryGetValue(HitResult.Miss, out int countMiss);
+
+        double total = 6 * countGreat + 2 * countGood + countMeh;
+        double max = 6 * (countGreat + countGood + countMeh + countMiss);
+
+        bool hasSliderTailHits = statistics.TryGetValue(HitResult.SliderTailHit, out int countSliderTailHit);
+        bool hasLargeTickMisses = statistics.TryGetValue(HitResult.LargeTickMiss, out int countLargeTickMiss);
+
+        if (hasSliderTailHits || hasLargeTickMisses)
+        {
+            int countSliders = 0;
+            int countLargeTicks = 0;
+
+            foreach (var hitObject in beatmap.HitObjects)
+            {
+                if (hasSliderTailHits && hitObject is Slider)
+                    countSliders++;
+
+                if (!hasLargeTickMisses)
+                    continue;
+
+                foreach (var nested in hitObject.NestedHitObjects)
+                {
+                    if (nested is SliderTick or SliderRepeat)
+                        countLargeTicks++;
+                }
+            }
+
+            if (hasSliderTailHits)
+            {
+                total += 3 * countSliderTailHit;
+                max += 3 * countSliders;
+            }
+
+            if (hasLargeTickMisses)
+            {
+                int countLargeTickHit = countLargeTicks - countLargeTickMiss;
+                total += 0.6 * countLargeTickHit;
+                max += 0.6 * countLargeTicks;
+            }
+        }
+
+        return max == 0 ? 1 : total / max;
+    }
+
+    // === osu!taiko ===
+
+    private static Dictionary<HitResult, int> generateTaiko(IBeatmap beatmap, double accuracy, int countMiss, int? countGood)
+    {
+        int totalResultCount = beatmap.GetMaxCombo();
+        int countGreat;
+
+        countMiss = Math.Clamp(countMiss, 0, totalResultCount);
+
+        if (countGood != null)
+        {
+            int totalSpecified = countGood.Value + countMiss;
+            if (totalSpecified > totalResultCount)
+                countGood = Math.Max(0, countGood.Value - (totalSpecified - totalResultCount));
+            countGreat = (int)(totalResultCount - countGood - countMiss);
+        }
+        else
+        {
+            int relevantResultCount = totalResultCount - countMiss;
+            int targetTotal = (int)Math.Round(accuracy * relevantResultCount * 2);
+            countGreat = targetTotal - (totalResultCount - countMiss);
+            countGood = totalResultCount - countGreat - countMiss;
+        }
+
+        return new Dictionary<HitResult, int>
+        {
+            { HitResult.Great, countGreat },
+            { HitResult.Ok, (int)countGood! },
+            { HitResult.Meh, 0 },
+            { HitResult.Miss, countMiss }
+        };
+    }
+
+    private static double getTaikoAccuracy(Dictionary<HitResult, int> statistics)
+    {
+        statistics.TryGetValue(HitResult.Great, out int countGreat);
+        statistics.TryGetValue(HitResult.Ok, out int countGood);
+        statistics.TryGetValue(HitResult.Miss, out int countMiss);
+
+        int total = countGreat + countGood + countMiss;
+        return total == 0 ? 1 : (double)(2 * countGreat + countGood) / (2 * total);
+    }
+
+    // === osu!catch ===
+
+    private static Dictionary<HitResult, int> generateCatch(IBeatmap beatmap, double accuracy, int countMiss,
+        int? countTinyDropletHits, int? countDropletHits)
+    {
+        int maxTinyDroplets = 0;
+        int maxDroplets = 0;
+        int maxFruits = 0;
+
+        foreach (var hitObject in beatmap.HitObjects)
+        {
+            if (hitObject is Fruit)
+            {
+                maxFruits++;
+                continue;
+            }
+
+            if (hitObject is not JuiceStream stream)
+                continue;
+
+            foreach (var nested in stream.NestedHitObjects)
+            {
+                switch (nested)
+                {
+                    case TinyDroplet:
+                        maxTinyDroplets++;
+                        break;
+                    case Droplet:
+                        maxDroplets++;
+                        break;
+                    case Fruit:
+                        maxFruits++;
+                        break;
+                }
+            }
+        }
+
+        int maxCombo = maxFruits + maxDroplets;
+
+        countMiss = Math.Clamp(countMiss, 0, maxCombo);
+        accuracy = Math.Clamp(accuracy, 0, 1);
+
+        int caughtDroplets;
+        int missedDroplets;
+
+        if (countDropletHits.HasValue)
+        {
+            caughtDroplets = Math.Clamp(countDropletHits.Value, 0, maxDroplets);
+            missedDroplets = maxDroplets - caughtDroplets;
+            if (missedDroplets > countMiss)
+            {
+                int recoveredDroplets = missedDroplets - countMiss;
+                caughtDroplets += recoveredDroplets;
+            }
+        }
+        else
+        {
+            caughtDroplets = Math.Max(0, maxDroplets - countMiss);
+        }
+
+        caughtDroplets = Math.Clamp(caughtDroplets, 0, maxDroplets);
+        missedDroplets = maxDroplets - caughtDroplets;
+        int missedFruits = Math.Clamp(countMiss - missedDroplets, 0, maxFruits);
+        int caughtFruits = maxFruits - missedFruits;
+
+        int caughtTinyDroplets;
+        int missedTinyDroplets;
+
+        if (countTinyDropletHits.HasValue)
+        {
+            caughtTinyDroplets = Math.Clamp(countTinyDropletHits.Value, 0, maxTinyDroplets);
+            missedTinyDroplets = maxTinyDroplets - caughtTinyDroplets;
+        }
+        else
+        {
+            int totalAccuracyObjects = maxFruits + maxDroplets + maxTinyDroplets;
+            int targetHits = (int)Math.Round(accuracy * totalAccuracyObjects, MidpointRounding.AwayFromZero);
+            caughtTinyDroplets = Math.Clamp(targetHits - caughtFruits - caughtDroplets, 0, maxTinyDroplets);
+            missedTinyDroplets = maxTinyDroplets - caughtTinyDroplets;
+        }
+
+        return new Dictionary<HitResult, int>
+        {
+            { HitResult.Great, caughtFruits },
+            { HitResult.LargeTickHit, caughtDroplets },
+            { HitResult.SmallTickHit, caughtTinyDroplets },
+            { HitResult.SmallTickMiss, missedTinyDroplets },
+            { HitResult.Miss, countMiss }
+        };
+    }
+
+    private static double getCatchAccuracy(Dictionary<HitResult, int> statistics)
+    {
+        statistics.TryGetValue(HitResult.Great, out int great);
+        statistics.TryGetValue(HitResult.LargeTickHit, out int largeTick);
+        statistics.TryGetValue(HitResult.SmallTickHit, out int smallTick);
+        statistics.TryGetValue(HitResult.Miss, out int miss);
+        statistics.TryGetValue(HitResult.SmallTickMiss, out int smallMiss);
+
+        double hits = great + largeTick + smallTick;
+        double total = hits + miss + smallMiss;
+        return total == 0 ? 1 : hits / total;
+    }
+
+    // === osu!mania ===
+
+    private static Dictionary<HitResult, int> generateMania(IBeatmap beatmap, Mod[] mods, double accuracy, int countMiss,
+        int? countMeh, int? countOk, int? countGood, int? countGreat)
+    {
+        bool isClassic = mods.Any(m => m is ModClassic);
+        int totalHits = beatmap.HitObjects.Count;
+
+        if (!isClassic)
+            totalHits += beatmap.HitObjects.Count(ho => ho is HoldNote);
+
+        accuracy = Math.Clamp(accuracy, 0, 1);
+        countMiss = Math.Clamp(countMiss, 0, totalHits);
+
+        if (countMeh != null || countOk != null || countGood != null || countGreat != null)
+        {
+            int specifiedHits = countMiss + (countMeh ?? 0) + (countOk ?? 0) + (countGood ?? 0) + (countGreat ?? 0);
+
+            if (specifiedHits > totalHits)
+                throw new ArgumentException($"Specified mania hit results ({specifiedHits}) exceed the map's total hit count ({totalHits}).");
+
+            return new Dictionary<HitResult, int>
+            {
+                [HitResult.Perfect] = totalHits - specifiedHits,
+                [HitResult.Great] = countGreat ?? 0,
+                [HitResult.Good] = countGood ?? 0,
+                [HitResult.Ok] = countOk ?? 0,
+                [HitResult.Meh] = countMeh ?? 0,
+                [HitResult.Miss] = countMiss,
+            };
+        }
+
+        int perfectValue = isClassic ? 300 : 305;
+        int nonMissCount = totalHits - countMiss;
+
+        if (nonMissCount == 0)
+        {
+            return new Dictionary<HitResult, int>
+            {
+                [HitResult.Perfect] = 0,
+                [HitResult.Great] = 0,
+                [HitResult.Good] = 0,
+                [HitResult.Ok] = 0,
+                [HitResult.Meh] = 0,
+                [HitResult.Miss] = totalHits,
+            };
+        }
+
+        int targetPoints = (int)Math.Round(accuracy * totalHits * perfectValue, MidpointRounding.AwayFromZero);
+        int minimumPointsWithRequestedMisses = 50 * nonMissCount;
+
+        if (targetPoints < minimumPointsWithRequestedMisses)
+        {
+            int lowAccuracyMehs = Math.Clamp(
+                (int)Math.Round(targetPoints / 50.0, MidpointRounding.AwayFromZero),
+                0,
+                nonMissCount
+            );
+
+            return new Dictionary<HitResult, int>
+            {
+                [HitResult.Perfect] = 0,
+                [HitResult.Great] = 0,
+                [HitResult.Good] = 0,
+                [HitResult.Ok] = 0,
+                [HitResult.Meh] = lowAccuracyMehs,
+                [HitResult.Miss] = totalHits - lowAccuracyMehs,
+            };
+        }
+
+        int maximumPoints = perfectValue * nonMissCount;
+        targetPoints = Math.Clamp(targetPoints, minimumPointsWithRequestedMisses, maximumPoints);
+
+        int generatedPerfects = 0;
+        int generatedGreats = 0;
+        int generatedGoods = 0;
+        int generatedOks = 0;
+        int generatedMehs = 0;
+
+        if (!isClassic && targetPoints >= 300 * nonMissCount)
+        {
+            generatedGreats = resolveLowerJudgementCount(nonMissCount, targetPoints, 305, 300);
+            generatedPerfects = nonMissCount - generatedGreats;
+        }
+        else if (targetPoints >= 200 * nonMissCount)
+        {
+            generatedGoods = resolveLowerJudgementCount(nonMissCount, targetPoints, 300, 200);
+            int upperCount = nonMissCount - generatedGoods;
+
+            if (isClassic)
+                generatedPerfects = upperCount;
+            else
+                generatedGreats = upperCount;
+        }
+        else if (targetPoints >= 100 * nonMissCount)
+        {
+            generatedOks = resolveLowerJudgementCount(nonMissCount, targetPoints, 200, 100);
+            generatedGoods = nonMissCount - generatedOks;
+        }
+        else
+        {
+            generatedMehs = resolveLowerJudgementCount(nonMissCount, targetPoints, 100, 50);
+            generatedOks = nonMissCount - generatedMehs;
+        }
+
+        return new Dictionary<HitResult, int>
+        {
+            [HitResult.Perfect] = generatedPerfects,
+            [HitResult.Great] = generatedGreats,
+            [HitResult.Good] = generatedGoods,
+            [HitResult.Ok] = generatedOks,
+            [HitResult.Meh] = generatedMehs,
+            [HitResult.Miss] = countMiss,
+        };
+    }
+
+    private static int resolveLowerJudgementCount(int hitCount, int targetPoints, int upperValue, int lowerValue)
+    {
+        if (hitCount <= 0)
+            return 0;
+
+        double exactLowerCount = ((double)upperValue * hitCount - targetPoints) / (upperValue - lowerValue);
+
+        int floorCount = Math.Clamp((int)Math.Floor(exactLowerCount), 0, hitCount);
+        int ceilingCount = Math.Clamp((int)Math.Ceiling(exactLowerCount), 0, hitCount);
+
+        long floorPoints = (long)upperValue * (hitCount - floorCount) + (long)lowerValue * floorCount;
+        long ceilingPoints = (long)upperValue * (hitCount - ceilingCount) + (long)lowerValue * ceilingCount;
+
+        long floorError = Math.Abs(floorPoints - targetPoints);
+        long ceilingError = Math.Abs(ceilingPoints - targetPoints);
+
+        return ceilingError < floorError ? ceilingCount : floorCount;
+    }
+
+    private static double getManiaAccuracy(Dictionary<HitResult, int> statistics, Mod[] mods)
+    {
+        statistics.TryGetValue(HitResult.Perfect, out int countPerfect);
+        statistics.TryGetValue(HitResult.Great, out int countGreat);
+        statistics.TryGetValue(HitResult.Good, out int countGood);
+        statistics.TryGetValue(HitResult.Ok, out int countOk);
+        statistics.TryGetValue(HitResult.Meh, out int countMeh);
+        statistics.TryGetValue(HitResult.Miss, out int countMiss);
+
+        int perfectWeight = mods.Any(m => m is ModClassic) ? 300 : 305;
+
+        double total = (perfectWeight * countPerfect) + (300 * countGreat) + (200 * countGood) + (100 * countOk) + (50 * countMeh);
+        double max = perfectWeight * (countPerfect + countGreat + countGood + countOk + countMeh + countMiss);
+
+        return max == 0 ? 1 : total / max;
+    }
+}

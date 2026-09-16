@@ -1,0 +1,17 @@
+out/
+build/
+.history/
+node_modules/
+config.json
+config.test.json
+cached_osu_api_token.json
+references/
+cache/
+src/generated/
+OsuToolsService/Generated/
+OsuToolsService/bin/
+OsuToolsService/obj/
+OsuToolsService.Tests/bin/
+OsuToolsService.Tests/obj/
+*.user
+src/version.ts

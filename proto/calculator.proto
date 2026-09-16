@@ -1,0 +1,85 @@
+syntax = "proto3";
+package osutoolsapi;
+
+option csharp_namespace = "OsuToolsService.Grpc";
+
+service Calculator {
+  rpc CalculateDifficulty(DifficultyRequest) returns (DifficultyResponse);
+  rpc CalculatePerformance(PerformanceRequest) returns (PerformanceResponse);
+}
+
+message Mod {
+  string acronym = 1;               // e.g. "DT", "HD"
+  map<string, string> settings = 2; // e.g. {"speed_change": "1.1"}
+}
+
+// Difficulty
+
+message DifficultyRequest {
+  bytes beatmap_data = 1;           // Raw .osu file content
+  int32 ruleset_id = 2;             // 0=osu, 1=taiko, 2=catch, 3=mania (-1 = auto)
+  repeated Mod mods = 3;            // Mods with optional settings
+}
+
+message DifficultyResponse {
+  double star_rating = 1;
+  double approach_rate = 2;
+  double overall_difficulty = 3;
+  double circle_size = 4;
+  double drain_rate = 5;
+  int64 max_combo = 6;
+  string attributes_json = 7;       // Full DifficultyAttributes as JSON (Newtonsoft)
+  string error = 8;                 // Empty on success
+  double bpm = 9;                   // Modded BPM
+  double length = 10;               // Modded total length in seconds
+  double drain_length = 11;         // Modded drain length in seconds (total minus breaks)
+}
+
+// Performance
+
+message PerformanceRequest {
+  bytes beatmap_data = 1;
+  int32 ruleset_id = 2;             // -1 = auto
+  repeated Mod mods = 3;
+  double accuracy = 5;              // 0-100, default 100
+  int32 misses = 6;                 // Default 0
+  int32 mehs = 7;                   // Optional, ruleset-dependent
+  int32 goods = 8;
+  int32 oks = 9;                    // For mania
+  int32 greats = 10;                // For mania
+  int32 combo = 11;                 // Optional
+  double percent_combo = 12;       // Optional, 0-100
+  int32 large_tick_misses = 13;
+  int32 slider_tail_misses = 14;
+  int32 tiny_droplets = 15;         // For catch
+  int32 droplets = 16;              // For catch
+  int64 legacy_total_score = 17;
+  string precalculated_difficulty = 18; // JSON-serialized DifficultyAttributes; skips difficulty calc if set
+}
+
+message PerformanceResponse {
+  double performance = 1;           // Total PP
+  DifficultyResponse difficulty = 2;
+  ScoreStatistics score = 3;
+  PerformanceAttributes performance_attributes = 4;
+  string error = 5;
+}
+
+message ScoreStatistics {
+  int32 ruleset_id = 1;
+  int32 beatmap_id = 2;
+  string beatmap_name = 3;
+  double accuracy = 4;
+  int32 combo = 5;
+  map<string, int32> statistics = 6; // {"great": 1234, "miss": 2, ...}
+}
+
+message PerformanceAttributes {
+  double total = 1;
+  double aim = 2;
+  double speed = 3;
+  double accuracy_pp = 4;
+  double flashlight = 5;
+  double effective_miss_count = 6;
+  string extra_json = 7;            // Ruleset-specific extras as JSON
+}
