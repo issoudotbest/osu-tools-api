@@ -1,0 +1,13 @@
+OsuToolsService/bin/
+OsuToolsService/obj/
+OsuToolsService.Tests/bin/
+OsuToolsService.Tests/obj/
+build/
+node_modules/
+cache/
+config.json
+references/
+test/
+*.md
+.git/
+.gitignore

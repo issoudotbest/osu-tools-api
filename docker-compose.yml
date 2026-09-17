@@ -1,0 +1,10 @@
+services:
+  osu-tools-api:
+    build: .
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./cache:/app/cache
+    restart: unless-stopped
