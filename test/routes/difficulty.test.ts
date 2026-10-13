@@ -42,6 +42,7 @@ describe("POST /api/difficulty", () => {
                 maxCombo: 500,
                 bpm: 180,
                 baseBpm: 160,
+                breakCount: 2,
                 length: 120,
                 drainLength: 100,
                 attributes: { star_rating: 5.25 }
@@ -61,6 +62,7 @@ describe("POST /api/difficulty", () => {
             maxCombo: 500,
             bpm: 180,
             baseBpm: 160,
+            breakCount: 2,
             length: 120,
             drainLength: 100,
             attributes: { star_rating: 5.25 }
@@ -137,6 +139,7 @@ describe("POST /api/difficulty", () => {
                 maxCombo: 500,
                 bpm: 270,
                 baseBpm: 180,
+                breakCount: 2,
                 length: 80,
                 drainLength: 60,
                 attributes: {}

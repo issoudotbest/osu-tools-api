@@ -57,6 +57,7 @@ public class CalculatorService : Calculator.CalculatorBase
                 BaseBpm = baseBpm,
                 Length = length,
                 DrainLength = drainLength,
+                BreakCount = workingBeatmap.Beatmap.Breaks.Count,
                 AttributesJson = attributesJson,
                 Error = ""
             });
@@ -163,6 +164,7 @@ public class CalculatorService : Calculator.CalculatorBase
                 BaseBpm = baseBpm,
                 Length = length,
                 DrainLength = drainLength,
+                BreakCount = workingBeatmap.Beatmap.Breaks.Count,
                 AttributesJson = serializeDifficultyAttributes(difficultyAttributes),
                 Error = ""
             };

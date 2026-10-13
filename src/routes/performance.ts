@@ -102,6 +102,7 @@ router.post("/", async (req: Request, res: Response) => {
             maxCombo: perf.difficulty.maxCombo,
             bpm: perf.difficulty.bpm,
             baseBpm: perf.difficulty.baseBpm,
+            breakCount: perf.difficulty.breakCount,
             length: perf.difficulty.length,
             drainLength: perf.difficulty.drainLength,
             attributes: perf.difficulty.attributes

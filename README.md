@@ -105,6 +105,7 @@ Calculates difficulty attributes for a beatmap.
     "maxCombo": 500,
     "bpm": 180,
     "baseBpm": 160,
+    "breakCount": 2,
     "length": 120,
     "drainLength": 100,
     "attributes": { ... }
@@ -151,6 +152,7 @@ Calculates performance (PP) for a score on a beatmap.
         "maxCombo": 500,
         "bpm": 180,
         "baseBpm": 160,
+        "breakCount": 2,
         "length": 120,
         "drainLength": 100,
         "attributes": { ... }
