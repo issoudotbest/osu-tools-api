@@ -35,6 +35,10 @@ message DifficultyResponse {
   double drain_length = 11;         // Modded drain length in seconds (total minus breaks)
   double base_bpm = 12;              // Unmodded BPM (rate-independent)
   int32 break_count = 13;            // Number of breaks in the beatmap
+  double base_approach_rate = 14;     // Unmodded AR (from the raw beatmap)
+  double base_overall_difficulty = 15; // Unmodded OD
+  double base_circle_size = 16;       // Unmodded CS
+  double base_drain_rate = 17;        // Unmodded HP
 }
 
 // Performance

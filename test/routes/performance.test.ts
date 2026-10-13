@@ -40,6 +40,10 @@ describe("POST /api/performance", () => {
                     overallDifficulty: 8,
                     circleSize: 4,
                     drainRate: 5,
+                    baseApproachRate: 8,
+                    baseOverallDifficulty: 7,
+                    baseCircleSize: 4,
+                    baseDrainRate: 5,
                     maxCombo: 500,
                     bpm: 180,
                     baseBpm: 160,
@@ -77,6 +81,8 @@ describe("POST /api/performance", () => {
         expect(res.status).toBe(200)
         expect(res.body.performance).toBe(456.78)
         expect(res.body.difficulty.starRating).toBe(5.25)
+        expect(res.body.difficulty.baseApproachRate).toBe(8)
+        expect(res.body.difficulty.baseOverallDifficulty).toBe(7)
         expect(res.body.difficulty.bpm).toBe(180)
         expect(res.body.difficulty.baseBpm).toBe(160)
         expect(res.body.difficulty.breakCount).toBe(2)
@@ -137,7 +143,7 @@ describe("POST /api/performance", () => {
             ok: true,
             data: {
                 performance: 300,
-                difficulty: { starRating: 5, approachRate: 9, overallDifficulty: 8, circleSize: 4, drainRate: 5, maxCombo: 500, bpm: 180, baseBpm: 160, breakCount: 2, length: 120, drainLength: 100, attributes: {} },
+                difficulty: { starRating: 5, approachRate: 9, overallDifficulty: 8, circleSize: 4, drainRate: 5, baseApproachRate: 8, baseOverallDifficulty: 7, baseCircleSize: 4, baseDrainRate: 5, maxCombo: 500, bpm: 180, baseBpm: 160, breakCount: 2, length: 120, drainLength: 100, attributes: {} },
                 score: { rulesetId: 0, beatmapId: 75, beatmapName: "test", accuracy: 95, combo: 450, statistics: {} },
                 performanceAttributes: { total: 300, aim: 100, speed: 100, accuracyPp: 50, flashlight: 0, effectiveMissCount: 1, extra: {} }
             }

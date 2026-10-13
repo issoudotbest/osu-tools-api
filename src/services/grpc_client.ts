@@ -24,6 +24,10 @@ export interface DifficultyResult {
     overallDifficulty: number
     circleSize: number
     drainRate: number
+    baseApproachRate: number
+    baseOverallDifficulty: number
+    baseCircleSize: number
+    baseDrainRate: number
     maxCombo: number
     bpm: number
     baseBpm: number
@@ -109,6 +113,10 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
             overallDifficulty: 0,
             circleSize: 0,
             drainRate: 0,
+            baseApproachRate: 0,
+            baseOverallDifficulty: 0,
+            baseCircleSize: 0,
+            baseDrainRate: 0,
             maxCombo: 0,
             bpm: 0,
             baseBpm: 0,
@@ -125,6 +133,10 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
         overallDifficulty: resp.overallDifficulty ?? 0,
         circleSize: resp.circleSize ?? 0,
         drainRate: resp.drainRate ?? 0,
+        baseApproachRate: resp.baseApproachRate ?? 0,
+        baseOverallDifficulty: resp.baseOverallDifficulty ?? 0,
+        baseCircleSize: resp.baseCircleSize ?? 0,
+        baseDrainRate: resp.baseDrainRate ?? 0,
         maxCombo: Number(resp.maxCombo ?? 0),
         bpm: resp.bpm ?? 0,
         baseBpm: resp.baseBpm ?? 0,

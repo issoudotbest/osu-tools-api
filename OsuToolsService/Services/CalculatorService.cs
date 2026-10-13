@@ -45,6 +45,9 @@ public class CalculatorService : Calculator.CalculatorBase
 
             var attributesJson = serializeDifficultyAttributes(attributes);
 
+            // Unmodded difficulty values come from the raw decoded beatmap, before any mods are applied
+            var baseDifficulty = workingBeatmap.BeatmapInfo.Difficulty;
+
             return Task.FromResult(new DifficultyResponse
             {
                 StarRating = starRating,
@@ -52,6 +55,10 @@ public class CalculatorService : Calculator.CalculatorBase
                 OverallDifficulty = overallDifficulty,
                 CircleSize = circleSize,
                 DrainRate = drainRate,
+                BaseApproachRate = baseDifficulty.ApproachRate,
+                BaseOverallDifficulty = baseDifficulty.OverallDifficulty,
+                BaseCircleSize = baseDifficulty.CircleSize,
+                BaseDrainRate = baseDifficulty.DrainRate,
                 MaxCombo = maxCombo,
                 Bpm = bpm,
                 BaseBpm = baseBpm,
@@ -152,6 +159,9 @@ public class CalculatorService : Calculator.CalculatorBase
                 extractDifficultyAttributes(difficultyAttributes, workingBeatmap, mods);
             var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
 
+            // Unmodded difficulty values come from the raw decoded beatmap, before any mods are applied
+            var baseDifficulty = workingBeatmap.BeatmapInfo.Difficulty;
+
             var difficultyResponse = new DifficultyResponse
             {
                 StarRating = starRating,
@@ -159,6 +169,10 @@ public class CalculatorService : Calculator.CalculatorBase
                 OverallDifficulty = overallDifficulty,
                 CircleSize = circleSize,
                 DrainRate = drainRate,
+                BaseApproachRate = baseDifficulty.ApproachRate,
+                BaseOverallDifficulty = baseDifficulty.OverallDifficulty,
+                BaseCircleSize = baseDifficulty.CircleSize,
+                BaseDrainRate = baseDifficulty.DrainRate,
                 MaxCombo = maxCombo,
                 Bpm = bpm,
                 BaseBpm = baseBpm,

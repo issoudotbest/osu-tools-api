@@ -11,6 +11,10 @@ describe("parseDifficultyResponse", () => {
             overallDifficulty: 8,
             circleSize: 4,
             drainRate: 5,
+            baseApproachRate: 8,
+            baseOverallDifficulty: 7,
+            baseCircleSize: 4,
+            baseDrainRate: 5,
             maxCombo: 500 as any,
             bpm: 180,
             baseBpm: 160,
@@ -28,6 +32,10 @@ describe("parseDifficultyResponse", () => {
         expect(result.overallDifficulty).toBe(8)
         expect(result.circleSize).toBe(4)
         expect(result.drainRate).toBe(5)
+        expect(result.baseApproachRate).toBe(8)
+        expect(result.baseOverallDifficulty).toBe(7)
+        expect(result.baseCircleSize).toBe(4)
+        expect(result.baseDrainRate).toBe(5)
         expect(result.maxCombo).toBe(500)
         expect(result.bpm).toBe(180)
         expect(result.baseBpm).toBe(160)
@@ -48,6 +56,10 @@ describe("parseDifficultyResponse", () => {
         expect(result.overallDifficulty).toBe(0)
         expect(result.circleSize).toBe(0)
         expect(result.drainRate).toBe(0)
+        expect(result.baseApproachRate).toBe(0)
+        expect(result.baseOverallDifficulty).toBe(0)
+        expect(result.baseCircleSize).toBe(0)
+        expect(result.baseDrainRate).toBe(0)
         expect(result.maxCombo).toBe(0)
         expect(result.bpm).toBe(0)
         expect(result.baseBpm).toBe(0)
@@ -82,6 +94,10 @@ describe("parseDifficultyResponse", () => {
         expect(result.overallDifficulty).toBe(0)
         expect(result.circleSize).toBe(0)
         expect(result.drainRate).toBe(0)
+        expect(result.baseApproachRate).toBe(0)
+        expect(result.baseOverallDifficulty).toBe(0)
+        expect(result.baseCircleSize).toBe(0)
+        expect(result.baseDrainRate).toBe(0)
         expect(result.maxCombo).toBe(0)
         expect(result.bpm).toBe(0)
         expect(result.baseBpm).toBe(0)
@@ -111,6 +127,10 @@ describe("parsePerformanceResponse", () => {
                 overallDifficulty: 8,
                 circleSize: 4,
                 drainRate: 5,
+                baseApproachRate: 8,
+                baseOverallDifficulty: 7,
+                baseCircleSize: 4,
+                baseDrainRate: 5,
                 maxCombo: 500 as any,
                 bpm: 180,
                 baseBpm: 160,
@@ -144,6 +164,8 @@ describe("parsePerformanceResponse", () => {
 
         expect(result.performance).toBe(456.78)
         expect(result.difficulty.starRating).toBe(5.25)
+        expect(result.difficulty.baseApproachRate).toBe(8)
+        expect(result.difficulty.baseOverallDifficulty).toBe(7)
         expect(result.difficulty.bpm).toBe(180)
         expect(result.difficulty.baseBpm).toBe(160)
         expect(result.difficulty.breakCount).toBe(2)
