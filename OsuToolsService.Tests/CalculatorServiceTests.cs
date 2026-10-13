@@ -864,6 +864,10 @@ public class CalculatorServiceTests
         var (totalLargeTicks, totalSliderEnds) = countOsuSliderTargets(playableBeatmap);
         Assert.True(totalLargeTicks > 0);
         Assert.True(totalSliderEnds > 0);
+        Assert.Equal(totalLargeTicks, HitResultGenerator.CountLargeTicks(playableBeatmap));
+
+        // The osu.osu fixture has no spinners, so spinner bonus counts are zero
+        Assert.Equal((0, 0), HitResultGenerator.CountSpinnerBonuses(playableBeatmap));
 
         // Miss counts are also supplied but must be ignored when hits are set
         var stats = HitResultGenerator.Generate(
@@ -897,6 +901,27 @@ public class CalculatorServiceTests
         Assert.Equal(totalLargeTicks, clampedStats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickHit));
         Assert.Equal(0, clampedStats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickMiss));
         Assert.Equal(totalSliderEnds, clampedStats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.SliderTailHit));
+    }
+
+    [Fact]
+    public void HitResultGenerator_Osu_SpinnerBonusCounts_SyntheticSpinner()
+    {
+        // One 10-second spinner at OD 5: enough duration for both required spins and bonus spins
+        var osuFile =
+            "osu file format v14\n\n[General]\nAudioFilename: audio.mp3\nAudioLeadIn: 0\nMode: 0\n\n" +
+            "[Metadata]\nTitle: synthetic\nArtist: test\nCreator: test\nVersion: synthetic\n\n" +
+            "[Difficulty]\nCircleSize: 4\nOverallDifficulty: 5\nApproachRate: 9\nSliderMultiplier: 1.4\nSliderTickRate: 1\n\n" +
+            "[TimingPoints]\n0,600,4,2,0,60,1,0\n\n" +
+            "[HitObjects]\n256,192,1000,12,0,11000,0:0:0:0:\n";
+
+        var wb = new MemoryWorkingBeatmap(System.Text.Encoding.UTF8.GetBytes(osuFile));
+        var ruleset = new OsuRuleset();
+        var playableBeatmap = wb.GetPlayableBeatmap(ruleset.RulesetInfo, Array.Empty<osu.Game.Rulesets.Mods.Mod>());
+
+        var (largeBonusCount, smallBonusCount) = HitResultGenerator.CountSpinnerBonuses(playableBeatmap);
+
+        Assert.True(smallBonusCount > 0); // required spins
+        Assert.True(largeBonusCount > 0); // bonus spins
     }
 
     [Fact]

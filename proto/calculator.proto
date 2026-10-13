@@ -41,6 +41,9 @@ message DifficultyResponse {
   double base_drain_rate = 17;        // Unmodded HP
   bool is_suspicious = 18;            // True if the beatmap failed the anti-abuse heuristic; calculation is skipped
   string suspicious_reason = 19;      // Machine-readable reason when is_suspicious (e.g. "density"); empty otherwise
+  int32 large_tick_count = 20;        // Slider ticks + repeats as converted for this calculation (osu!); 0 for other rulesets
+  int32 large_bonus_count = 21;       // Spinner bonus ticks available (osu!); 0 for other rulesets
+  int32 small_bonus_count = 22;       // Spinner spin ticks available (osu!); 0 for other rulesets
 }
 
 // Performance

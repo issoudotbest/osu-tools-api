@@ -50,6 +50,51 @@ public static class HitResultGenerator
         };
     }
 
+    /// <summary>
+    /// Counts the beatmap's large ticks (slider ticks and repeats), which drive osu! tick statistics.
+    /// Expects a playable beatmap with nested hit objects populated, which <c>GetPlayableBeatmap</c> guarantees.
+    /// </summary>
+    public static int CountLargeTicks(IBeatmap beatmap)
+    {
+        int count = 0;
+
+        foreach (var hitObject in beatmap.HitObjects)
+        {
+            foreach (var nested in hitObject.NestedHitObjects)
+            {
+                if (nested is SliderTick or SliderRepeat)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Counts the beatmap's spinner ticks: bonus spins (LargeBonus) and required spins (SmallBonus).
+    /// Unlike <see cref="CountLargeTicks"/>, these depend on OverallDifficulty, so the playable beatmap
+    /// (with mods applied) must be passed to reflect the requested calculation.
+    /// </summary>
+    public static (int largeBonusCount, int smallBonusCount) CountSpinnerBonuses(IBeatmap beatmap)
+    {
+        int largeBonusCount = 0;
+        int smallBonusCount = 0;
+
+        foreach (var hitObject in beatmap.HitObjects)
+        {
+            foreach (var nested in hitObject.NestedHitObjects)
+            {
+                // SpinnerBonusTick derives from SpinnerTick, so it must be checked first
+                if (nested is SpinnerBonusTick)
+                    largeBonusCount++;
+                else if (nested is SpinnerTick)
+                    smallBonusCount++;
+            }
+        }
+
+        return (largeBonusCount, smallBonusCount);
+    }
+
     // === osu! standard ===
 
     private static Dictionary<HitResult, int> generateOsu(IBeatmap beatmap, Mod[] mods, double accuracy, int countMiss,
@@ -72,16 +117,12 @@ public static class HitResultGenerator
 
         if (!isClassic)
         {
+            totalLargeTicks = CountLargeTicks(beatmap);
+
             foreach (var hitObject in beatmap.HitObjects)
             {
                 if (hitObject is Slider)
                     totalSliderEnds++;
-
-                foreach (var nested in hitObject.NestedHitObjects)
-                {
-                    if (nested is SliderTick or SliderRepeat)
-                        totalLargeTicks++;
-                }
             }
 
             // Hit counts take priority over miss counts when both are supplied

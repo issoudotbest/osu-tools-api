@@ -19,6 +19,9 @@ describe("parseDifficultyResponse", () => {
             bpm: 180,
             baseBpm: 160,
             breakCount: 2,
+            largeTickCount: 87,
+            largeBonusCount: 2,
+            smallBonusCount: 20,
             length: 120,
             drainLength: 100,
             isSuspicious: false,
@@ -42,6 +45,9 @@ describe("parseDifficultyResponse", () => {
         expect(result.bpm).toBe(180)
         expect(result.baseBpm).toBe(160)
         expect(result.breakCount).toBe(2)
+        expect(result.largeTickCount).toBe(87)
+        expect(result.largeBonusCount).toBe(2)
+        expect(result.smallBonusCount).toBe(20)
         expect(result.length).toBe(120)
         expect(result.drainLength).toBe(100)
         expect(result.isSuspicious).toBe(false)
@@ -68,6 +74,9 @@ describe("parseDifficultyResponse", () => {
         expect(result.bpm).toBe(0)
         expect(result.baseBpm).toBe(0)
         expect(result.breakCount).toBe(0)
+        expect(result.largeTickCount).toBe(0)
+        expect(result.largeBonusCount).toBe(0)
+        expect(result.smallBonusCount).toBe(0)
         expect(result.length).toBe(0)
         expect(result.drainLength).toBe(0)
         expect(result.isSuspicious).toBe(false)
@@ -108,6 +117,9 @@ describe("parseDifficultyResponse", () => {
         expect(result.bpm).toBe(0)
         expect(result.baseBpm).toBe(0)
         expect(result.breakCount).toBe(0)
+        expect(result.largeTickCount).toBe(0)
+        expect(result.largeBonusCount).toBe(0)
+        expect(result.smallBonusCount).toBe(0)
         expect(result.length).toBe(0)
         expect(result.drainLength).toBe(0)
         expect(result.isSuspicious).toBe(false)
@@ -143,6 +155,9 @@ describe("parsePerformanceResponse", () => {
                 bpm: 180,
                 baseBpm: 160,
                 breakCount: 2,
+                largeTickCount: 87,
+                largeBonusCount: 2,
+                smallBonusCount: 20,
                 length: 120,
                 drainLength: 100,
                 isSuspicious: false,
@@ -179,6 +194,9 @@ describe("parsePerformanceResponse", () => {
         expect(result.difficulty.bpm).toBe(180)
         expect(result.difficulty.baseBpm).toBe(160)
         expect(result.difficulty.breakCount).toBe(2)
+        expect(result.difficulty.largeTickCount).toBe(87)
+        expect(result.difficulty.largeBonusCount).toBe(2)
+        expect(result.difficulty.smallBonusCount).toBe(20)
         expect(result.difficulty.isSuspicious).toBe(false)
         expect(result.score.rulesetId).toBe(0)
         expect(result.score.beatmapId).toBe(75)

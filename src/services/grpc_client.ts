@@ -32,6 +32,9 @@ export interface DifficultyResult {
     bpm: number
     baseBpm: number
     breakCount: number
+    largeTickCount: number
+    largeBonusCount: number
+    smallBonusCount: number
     length: number
     drainLength: number
     isSuspicious: boolean
@@ -123,6 +126,9 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
             bpm: 0,
             baseBpm: 0,
             breakCount: 0,
+            largeTickCount: 0,
+            largeBonusCount: 0,
+            smallBonusCount: 0,
             length: 0,
             drainLength: 0,
             isSuspicious: false,
@@ -145,6 +151,9 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
         bpm: resp.bpm ?? 0,
         baseBpm: resp.baseBpm ?? 0,
         breakCount: resp.breakCount ?? 0,
+        largeTickCount: resp.largeTickCount ?? 0,
+        largeBonusCount: resp.largeBonusCount ?? 0,
+        smallBonusCount: resp.smallBonusCount ?? 0,
         length: resp.length ?? 0,
         drainLength: resp.drainLength ?? 0,
         isSuspicious: resp.isSuspicious ?? false,

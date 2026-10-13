@@ -52,14 +52,19 @@ public class CalculatorService : Calculator.CalculatorBase
 
             var attributes = ruleset.CreateDifficultyCalculator(workingBeatmap).Calculate(mods);
 
+            // GetPlayableBeatmap applies IApplicableToDifficulty mods (HR, EZ, DA, etc.) to the beatmap's difficulty
+            var playableBeatmap = workingBeatmap.GetPlayableBeatmap(ruleset.RulesetInfo, mods);
+
             var (starRating, approachRate, overallDifficulty, circleSize, drainRate, maxCombo) =
-                extractDifficultyAttributes(attributes, workingBeatmap, mods);
+                extractDifficultyAttributes(attributes, playableBeatmap, mods);
             var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
 
             var attributesJson = serializeDifficultyAttributes(attributes);
 
             // Unmodded difficulty values come from the raw decoded beatmap, before any mods are applied
             var baseDifficulty = workingBeatmap.BeatmapInfo.Difficulty;
+
+            var (largeBonusCount, smallBonusCount) = HitResultGenerator.CountSpinnerBonuses(playableBeatmap);
 
             return Task.FromResult(new DifficultyResponse
             {
@@ -78,6 +83,9 @@ public class CalculatorService : Calculator.CalculatorBase
                 Length = length,
                 DrainLength = drainLength,
                 BreakCount = workingBeatmap.Beatmap.Breaks.Count,
+                LargeTickCount = HitResultGenerator.CountLargeTicks(playableBeatmap),
+                LargeBonusCount = largeBonusCount,
+                SmallBonusCount = smallBonusCount,
                 IsSuspicious = false,
                 SuspiciousReason = "",
                 AttributesJson = attributesJson,
@@ -193,11 +201,13 @@ public class CalculatorService : Calculator.CalculatorBase
 
             // Build difficulty response
             var (starRating, approachRate, overallDifficulty, circleSize, drainRate, maxCombo) =
-                extractDifficultyAttributes(difficultyAttributes, workingBeatmap, mods);
+                extractDifficultyAttributes(difficultyAttributes, playableBeatmap, mods);
             var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
 
             // Unmodded difficulty values come from the raw decoded beatmap, before any mods are applied
             var baseDifficulty = workingBeatmap.BeatmapInfo.Difficulty;
+
+            var (largeBonusCount, smallBonusCount) = HitResultGenerator.CountSpinnerBonuses(playableBeatmap);
 
             var difficultyResponse = new DifficultyResponse
             {
@@ -216,6 +226,9 @@ public class CalculatorService : Calculator.CalculatorBase
                 Length = length,
                 DrainLength = drainLength,
                 BreakCount = workingBeatmap.Beatmap.Breaks.Count,
+                LargeTickCount = HitResultGenerator.CountLargeTicks(playableBeatmap),
+                LargeBonusCount = largeBonusCount,
+                SmallBonusCount = smallBonusCount,
                 IsSuspicious = false,
                 SuspiciousReason = "",
                 AttributesJson = serializeDifficultyAttributes(difficultyAttributes),
@@ -303,14 +316,10 @@ public class CalculatorService : Calculator.CalculatorBase
     }
 
     private static (double starRating, double approachRate, double overallDifficulty, double circleSize, double drainRate, long maxCombo)
-        extractDifficultyAttributes(DifficultyAttributes attributes, WorkingBeatmap beatmap, osu.Game.Rulesets.Mods.Mod[] mods)
+        extractDifficultyAttributes(DifficultyAttributes attributes, IBeatmap playableBeatmap, osu.Game.Rulesets.Mods.Mod[] mods)
     {
         double starRating = attributes.StarRating;
         long maxCombo = attributes.MaxCombo;
-
-        // GetPlayableBeatmap applies IApplicableToDifficulty mods (HR, EZ, DA, etc.) to the beatmap's difficulty
-        var rulesetInfo = beatmap.BeatmapInfo.Ruleset;
-        var playableBeatmap = beatmap.GetPlayableBeatmap(rulesetInfo, mods);
         var difficulty = playableBeatmap.Difficulty;
 
         // Apply speed mods (DT, HT, etc.) to effective AR and OD using the framework's own conversion methods
