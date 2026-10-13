@@ -112,9 +112,13 @@ Calculates difficulty attributes for a beatmap.
     "breakCount": 2,
     "length": 120,
     "drainLength": 100,
+    "isSuspicious": false,
+    "suspiciousReason": "",
     "attributes": { ... }
 }
 ```
+
+If the beatmap is flagged by the anti-abuse heuristic (maps crafted to hang or crash calculators, e.g. extreme note density or absurd object counts), calculation is skipped: numeric fields are `0`, `isSuspicious` is `true` and `suspiciousReason` is a machine-readable reason (`density`, `length`, `object_count`, `red_flag`, `slider_positions`, `slider_repeats`).
 
 ### POST /api/performance
 
@@ -163,6 +167,8 @@ Calculates performance (PP) for a score on a beatmap.
         "breakCount": 2,
         "length": 120,
         "drainLength": 100,
+        "isSuspicious": false,
+        "suspiciousReason": "",
         "attributes": { ... }
     },
     "score": {

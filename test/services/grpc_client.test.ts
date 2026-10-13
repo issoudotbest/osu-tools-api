@@ -21,6 +21,8 @@ describe("parseDifficultyResponse", () => {
             breakCount: 2,
             length: 120,
             drainLength: 100,
+            isSuspicious: false,
+            suspiciousReason: "",
             attributesJson: '{"star_rating":5.25,"max_combo":500}',
             error: ""
         }
@@ -42,6 +44,8 @@ describe("parseDifficultyResponse", () => {
         expect(result.breakCount).toBe(2)
         expect(result.length).toBe(120)
         expect(result.drainLength).toBe(100)
+        expect(result.isSuspicious).toBe(false)
+        expect(result.suspiciousReason).toBe("")
         expect(result.attributes).toEqual({ star_rating: 5.25, max_combo: 500 })
         expect(result.error).toBeUndefined()
     })
@@ -66,6 +70,8 @@ describe("parseDifficultyResponse", () => {
         expect(result.breakCount).toBe(0)
         expect(result.length).toBe(0)
         expect(result.drainLength).toBe(0)
+        expect(result.isSuspicious).toBe(false)
+        expect(result.suspiciousReason).toBe("")
         expect(result.attributes).toEqual({})
         expect(result.error).toBeUndefined()
     })
@@ -104,6 +110,8 @@ describe("parseDifficultyResponse", () => {
         expect(result.breakCount).toBe(0)
         expect(result.length).toBe(0)
         expect(result.drainLength).toBe(0)
+        expect(result.isSuspicious).toBe(false)
+        expect(result.suspiciousReason).toBe("")
         expect(result.attributes).toEqual({})
         expect(result.error).toBeUndefined()
     })
@@ -137,6 +145,8 @@ describe("parsePerformanceResponse", () => {
                 breakCount: 2,
                 length: 120,
                 drainLength: 100,
+                isSuspicious: false,
+                suspiciousReason: "",
                 attributesJson: '{"star_rating":5.25}',
                 error: ""
             },
@@ -169,6 +179,7 @@ describe("parsePerformanceResponse", () => {
         expect(result.difficulty.bpm).toBe(180)
         expect(result.difficulty.baseBpm).toBe(160)
         expect(result.difficulty.breakCount).toBe(2)
+        expect(result.difficulty.isSuspicious).toBe(false)
         expect(result.score.rulesetId).toBe(0)
         expect(result.score.beatmapId).toBe(75)
         expect(result.score.beatmapName).toBe("Test - Beatmap [Normal]")

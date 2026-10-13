@@ -34,6 +34,8 @@ export interface DifficultyResult {
     breakCount: number
     length: number
     drainLength: number
+    isSuspicious: boolean
+    suspiciousReason: string
     attributes: Record<string, unknown>
     error?: string
 }
@@ -123,6 +125,8 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
             breakCount: 0,
             length: 0,
             drainLength: 0,
+            isSuspicious: false,
+            suspiciousReason: "",
             attributes: {},
             error: undefined
         }
@@ -143,6 +147,8 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
         breakCount: resp.breakCount ?? 0,
         length: resp.length ?? 0,
         drainLength: resp.drainLength ?? 0,
+        isSuspicious: resp.isSuspicious ?? false,
+        suspiciousReason: resp.suspiciousReason ?? "",
         attributes: parseJsonSafe(resp.attributesJson),
         error: resp.error || undefined
     }

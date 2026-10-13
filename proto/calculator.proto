@@ -39,6 +39,8 @@ message DifficultyResponse {
   double base_overall_difficulty = 15; // Unmodded OD
   double base_circle_size = 16;       // Unmodded CS
   double base_drain_rate = 17;        // Unmodded HP
+  bool is_suspicious = 18;            // True if the beatmap failed the anti-abuse heuristic; calculation is skipped
+  string suspicious_reason = 19;      // Machine-readable reason when is_suspicious (e.g. "density"); empty otherwise
 }
 
 // Performance

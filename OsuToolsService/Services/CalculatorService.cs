@@ -37,6 +37,19 @@ public class CalculatorService : Calculator.CalculatorBase
             var ruleset = getRuleset(request.RulesetId, workingBeatmap);
             var mods = ModParser.ParseMods(ruleset, request.Mods);
 
+            // Refuse to calculate maps crafted to hang or crash the calculator
+            var suspiciousReason = SuspiciousBeatmapChecker.Check(workingBeatmap.Beatmap, ruleset.RulesetInfo.OnlineID);
+            if (suspiciousReason != null)
+            {
+                _logger.LogWarning("Beatmap flagged as suspicious ({Reason}); skipping difficulty calculation", suspiciousReason);
+                return Task.FromResult(new DifficultyResponse
+                {
+                    IsSuspicious = true,
+                    SuspiciousReason = suspiciousReason,
+                    Error = ""
+                });
+            }
+
             var attributes = ruleset.CreateDifficultyCalculator(workingBeatmap).Calculate(mods);
 
             var (starRating, approachRate, overallDifficulty, circleSize, drainRate, maxCombo) =
@@ -65,6 +78,8 @@ public class CalculatorService : Calculator.CalculatorBase
                 Length = length,
                 DrainLength = drainLength,
                 BreakCount = workingBeatmap.Beatmap.Breaks.Count,
+                IsSuspicious = false,
+                SuspiciousReason = "",
                 AttributesJson = attributesJson,
                 Error = ""
             });
@@ -100,6 +115,26 @@ public class CalculatorService : Calculator.CalculatorBase
             var workingBeatmap = new MemoryWorkingBeatmap(request.BeatmapData.ToByteArray());
             var ruleset = getRuleset(request.RulesetId, workingBeatmap);
             var mods = ModParser.ParseMods(ruleset, request.Mods);
+
+            // Refuse to calculate maps crafted to hang or crash the calculator
+            var suspiciousReason = SuspiciousBeatmapChecker.Check(workingBeatmap.Beatmap, ruleset.RulesetInfo.OnlineID);
+            if (suspiciousReason != null)
+            {
+                _logger.LogWarning("Beatmap flagged as suspicious ({Reason}); skipping performance calculation", suspiciousReason);
+                return Task.FromResult(new PerformanceResponse
+                {
+                    Performance = 0,
+                    Difficulty = new DifficultyResponse
+                    {
+                        IsSuspicious = true,
+                        SuspiciousReason = suspiciousReason,
+                        Error = ""
+                    },
+                    Score = new ScoreStatistics(),
+                    PerformanceAttributes = new GrpcPerformanceAttributes { ExtraJson = "{}" },
+                    Error = ""
+                });
+            }
 
             var playableBeatmap = workingBeatmap.GetPlayableBeatmap(ruleset.RulesetInfo, mods);
 
@@ -179,6 +214,8 @@ public class CalculatorService : Calculator.CalculatorBase
                 Length = length,
                 DrainLength = drainLength,
                 BreakCount = workingBeatmap.Beatmap.Breaks.Count,
+                IsSuspicious = false,
+                SuspiciousReason = "",
                 AttributesJson = serializeDifficultyAttributes(difficultyAttributes),
                 Error = ""
             };

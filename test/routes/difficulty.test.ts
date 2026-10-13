@@ -49,6 +49,8 @@ describe("POST /api/difficulty", () => {
                 breakCount: 2,
                 length: 120,
                 drainLength: 100,
+                isSuspicious: false,
+                suspiciousReason: "",
                 attributes: { star_rating: 5.25 }
             }
         })
@@ -73,6 +75,8 @@ describe("POST /api/difficulty", () => {
             breakCount: 2,
             length: 120,
             drainLength: 100,
+            isSuspicious: false,
+            suspiciousReason: "",
             attributes: { star_rating: 5.25 }
         })
     })
@@ -154,6 +158,8 @@ describe("POST /api/difficulty", () => {
                 breakCount: 2,
                 length: 80,
                 drainLength: 60,
+                isSuspicious: false,
+                suspiciousReason: "",
                 attributes: {}
             }
         })

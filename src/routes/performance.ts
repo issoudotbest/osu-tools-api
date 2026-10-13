@@ -109,6 +109,8 @@ router.post("/", async (req: Request, res: Response) => {
             breakCount: perf.difficulty.breakCount,
             length: perf.difficulty.length,
             drainLength: perf.difficulty.drainLength,
+            isSuspicious: perf.difficulty.isSuspicious,
+            suspiciousReason: perf.difficulty.suspiciousReason,
             attributes: perf.difficulty.attributes
         },
         score: perf.score,

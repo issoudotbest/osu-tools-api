@@ -79,6 +79,8 @@ router.post("/", async (req: Request, res: Response) => {
         breakCount: diff.breakCount,
         length: diff.length,
         drainLength: diff.drainLength,
+        isSuspicious: diff.isSuspicious,
+        suspiciousReason: diff.suspiciousReason,
         attributes: diff.attributes
     })
 })
