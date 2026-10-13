@@ -458,7 +458,7 @@ public class CalculatorServiceTests
 
     // === BPM / Length / DrainLength tests ===
 
-    private static (double bpm, double length, double drainLength) computeBpmAndLength(WorkingBeatmap beatmap, osu.Game.Rulesets.Mods.Mod[] mods)
+    private static (double bpm, double baseBpm, double length, double drainLength) computeBpmAndLength(WorkingBeatmap beatmap, osu.Game.Rulesets.Mods.Mod[] mods)
     {
         double baseBpm = 0;
         var timingPoints = beatmap.Beatmap.ControlPointInfo.TimingPoints;
@@ -476,7 +476,7 @@ public class CalculatorServiceTests
         double moddedLength = playableBeatmap.CalculatePlayableLength() / rate / 1000.0;
         double moddedDrainLength = playableBeatmap.CalculateDrainLength() / rate / 1000.0;
 
-        return (baseBpm * rate, moddedLength, moddedDrainLength);
+        return (baseBpm * rate, baseBpm, moddedLength, moddedDrainLength);
     }
 
     [Fact]
@@ -484,9 +484,10 @@ public class CalculatorServiceTests
     {
         var data = getBeatmapData("osu.osu");
         var wb = new MemoryWorkingBeatmap(data);
-        var (bpm, length, drainLength) = computeBpmAndLength(wb, Array.Empty<osu.Game.Rulesets.Mods.Mod>());
+        var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(wb, Array.Empty<osu.Game.Rulesets.Mods.Mod>());
 
         Assert.Equal(204.0, bpm, 0.01);
+        Assert.Equal(204.0, baseBpm, 0.01);
         Assert.Equal(249.117, length, 0.01);
         Assert.Equal(227.593, drainLength, 0.01);
         Assert.True(drainLength < length, "Drain length should be less than total length (map has breaks)");
@@ -500,10 +501,11 @@ public class CalculatorServiceTests
         var ruleset = new OsuRuleset();
         var mods = ModParser.ParseMods(ruleset, new List<Grpc.Mod> { new Grpc.Mod { Acronym = "DT" } });
 
-        var (bpm, length, drainLength) = computeBpmAndLength(wb, mods);
+        var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(wb, mods);
 
-        // DT rate = 1.5
+        // DT rate = 1.5, base BPM is unaffected by rate
         Assert.Equal(204.0 * 1.5, bpm, 0.01);
+        Assert.Equal(204.0, baseBpm, 0.01);
         Assert.Equal(249.117 / 1.5, length, 0.01);
         Assert.Equal(227.593 / 1.5, drainLength, 0.01);
     }
@@ -516,10 +518,11 @@ public class CalculatorServiceTests
         var ruleset = new OsuRuleset();
         var mods = ModParser.ParseMods(ruleset, new List<Grpc.Mod> { new Grpc.Mod { Acronym = "HT" } });
 
-        var (bpm, length, drainLength) = computeBpmAndLength(wb, mods);
+        var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(wb, mods);
 
-        // HT rate = 0.75
+        // HT rate = 0.75, base BPM is unaffected by rate
         Assert.Equal(204.0 * 0.75, bpm, 0.01);
+        Assert.Equal(204.0, baseBpm, 0.01);
         Assert.Equal(249.117 / 0.75, length, 0.01);
         Assert.Equal(227.593 / 0.75, drainLength, 0.01);
     }
@@ -535,10 +538,11 @@ public class CalculatorServiceTests
             new Grpc.Mod { Acronym = "DT", Settings = { { "speed_change", "1.1" } } }
         });
 
-        var (bpm, length, drainLength) = computeBpmAndLength(wb, mods);
+        var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(wb, mods);
 
-        // Custom DT rate = 1.1
+        // Custom DT rate = 1.1, base BPM is unaffected by rate
         Assert.Equal(204.0 * 1.1, bpm, 0.01);
+        Assert.Equal(204.0, baseBpm, 0.01);
         Assert.Equal(249.117 / 1.1, length, 0.01);
         Assert.Equal(227.593 / 1.1, drainLength, 0.01);
     }
@@ -548,9 +552,10 @@ public class CalculatorServiceTests
     {
         var data = getBeatmapData("mania.osu");
         var wb = new MemoryWorkingBeatmap(data);
-        var (bpm, length, drainLength) = computeBpmAndLength(wb, Array.Empty<osu.Game.Rulesets.Mods.Mod>());
+        var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(wb, Array.Empty<osu.Game.Rulesets.Mods.Mod>());
 
         Assert.Equal(200.0, bpm, 0.01);
+        Assert.Equal(200.0, baseBpm, 0.01);
         Assert.Equal(172.8, length, 0.01);
         // mania fixture has no breaks, so drain == length
         Assert.Equal(length, drainLength, 0.01);

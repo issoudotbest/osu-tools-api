@@ -101,6 +101,7 @@ router.post("/", async (req: Request, res: Response) => {
             drainRate: perf.difficulty.drainRate,
             maxCombo: perf.difficulty.maxCombo,
             bpm: perf.difficulty.bpm,
+            baseBpm: perf.difficulty.baseBpm,
             length: perf.difficulty.length,
             drainLength: perf.difficulty.drainLength,
             attributes: perf.difficulty.attributes

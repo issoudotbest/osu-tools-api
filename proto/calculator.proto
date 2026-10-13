@@ -33,6 +33,7 @@ message DifficultyResponse {
   double bpm = 9;                   // Modded BPM
   double length = 10;               // Modded total length in seconds
   double drain_length = 11;         // Modded drain length in seconds (total minus breaks)
+  double base_bpm = 12;              // Unmodded BPM (rate-independent)
 }
 
 // Performance

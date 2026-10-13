@@ -41,6 +41,7 @@ describe("POST /api/difficulty", () => {
                 drainRate: 5,
                 maxCombo: 500,
                 bpm: 180,
+                baseBpm: 160,
                 length: 120,
                 drainLength: 100,
                 attributes: { star_rating: 5.25 }
@@ -59,6 +60,7 @@ describe("POST /api/difficulty", () => {
             drainRate: 5,
             maxCombo: 500,
             bpm: 180,
+            baseBpm: 160,
             length: 120,
             drainLength: 100,
             attributes: { star_rating: 5.25 }
@@ -134,6 +136,7 @@ describe("POST /api/difficulty", () => {
                 drainRate: 5,
                 maxCombo: 500,
                 bpm: 270,
+                baseBpm: 180,
                 length: 80,
                 drainLength: 60,
                 attributes: {}

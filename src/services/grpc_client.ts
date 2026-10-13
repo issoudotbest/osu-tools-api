@@ -26,6 +26,7 @@ export interface DifficultyResult {
     drainRate: number
     maxCombo: number
     bpm: number
+    baseBpm: number
     length: number
     drainLength: number
     attributes: Record<string, unknown>
@@ -109,6 +110,7 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
             drainRate: 0,
             maxCombo: 0,
             bpm: 0,
+            baseBpm: 0,
             length: 0,
             drainLength: 0,
             attributes: {},
@@ -123,6 +125,7 @@ export function parseDifficultyResponse(resp: DifficultyResponse__Output | undef
         drainRate: resp.drainRate ?? 0,
         maxCombo: Number(resp.maxCombo ?? 0),
         bpm: resp.bpm ?? 0,
+        baseBpm: resp.baseBpm ?? 0,
         length: resp.length ?? 0,
         drainLength: resp.drainLength ?? 0,
         attributes: parseJsonSafe(resp.attributesJson),

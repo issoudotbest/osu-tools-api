@@ -13,6 +13,7 @@ describe("parseDifficultyResponse", () => {
             drainRate: 5,
             maxCombo: 500 as any,
             bpm: 180,
+            baseBpm: 160,
             length: 120,
             drainLength: 100,
             attributesJson: '{"star_rating":5.25,"max_combo":500}',
@@ -28,6 +29,7 @@ describe("parseDifficultyResponse", () => {
         expect(result.drainRate).toBe(5)
         expect(result.maxCombo).toBe(500)
         expect(result.bpm).toBe(180)
+        expect(result.baseBpm).toBe(160)
         expect(result.length).toBe(120)
         expect(result.drainLength).toBe(100)
         expect(result.attributes).toEqual({ star_rating: 5.25, max_combo: 500 })
@@ -46,6 +48,7 @@ describe("parseDifficultyResponse", () => {
         expect(result.drainRate).toBe(0)
         expect(result.maxCombo).toBe(0)
         expect(result.bpm).toBe(0)
+        expect(result.baseBpm).toBe(0)
         expect(result.length).toBe(0)
         expect(result.drainLength).toBe(0)
         expect(result.attributes).toEqual({})
@@ -78,6 +81,7 @@ describe("parseDifficultyResponse", () => {
         expect(result.drainRate).toBe(0)
         expect(result.maxCombo).toBe(0)
         expect(result.bpm).toBe(0)
+        expect(result.baseBpm).toBe(0)
         expect(result.length).toBe(0)
         expect(result.drainLength).toBe(0)
         expect(result.attributes).toEqual({})
@@ -105,6 +109,7 @@ describe("parsePerformanceResponse", () => {
                 drainRate: 5,
                 maxCombo: 500 as any,
                 bpm: 180,
+                baseBpm: 160,
                 length: 120,
                 drainLength: 100,
                 attributesJson: '{"star_rating":5.25}',
@@ -134,6 +139,8 @@ describe("parsePerformanceResponse", () => {
 
         expect(result.performance).toBe(456.78)
         expect(result.difficulty.starRating).toBe(5.25)
+        expect(result.difficulty.bpm).toBe(180)
+        expect(result.difficulty.baseBpm).toBe(160)
         expect(result.score.rulesetId).toBe(0)
         expect(result.score.beatmapId).toBe(75)
         expect(result.score.beatmapName).toBe("Test - Beatmap [Normal]")

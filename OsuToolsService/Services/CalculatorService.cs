@@ -41,7 +41,7 @@ public class CalculatorService : Calculator.CalculatorBase
 
             var (starRating, approachRate, overallDifficulty, circleSize, drainRate, maxCombo) =
                 extractDifficultyAttributes(attributes, workingBeatmap, mods);
-            var (bpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
+            var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
 
             var attributesJson = serializeDifficultyAttributes(attributes);
 
@@ -54,6 +54,7 @@ public class CalculatorService : Calculator.CalculatorBase
                 DrainRate = drainRate,
                 MaxCombo = maxCombo,
                 Bpm = bpm,
+                BaseBpm = baseBpm,
                 Length = length,
                 DrainLength = drainLength,
                 AttributesJson = attributesJson,
@@ -148,7 +149,7 @@ public class CalculatorService : Calculator.CalculatorBase
             // Build difficulty response
             var (starRating, approachRate, overallDifficulty, circleSize, drainRate, maxCombo) =
                 extractDifficultyAttributes(difficultyAttributes, workingBeatmap, mods);
-            var (bpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
+            var (bpm, baseBpm, length, drainLength) = computeBpmAndLength(workingBeatmap, mods);
 
             var difficultyResponse = new DifficultyResponse
             {
@@ -159,6 +160,7 @@ public class CalculatorService : Calculator.CalculatorBase
                 DrainRate = drainRate,
                 MaxCombo = maxCombo,
                 Bpm = bpm,
+                BaseBpm = baseBpm,
                 Length = length,
                 DrainLength = drainLength,
                 AttributesJson = serializeDifficultyAttributes(difficultyAttributes),
@@ -284,7 +286,7 @@ public class CalculatorService : Calculator.CalculatorBase
         return rate;
     }
 
-    private static (double bpm, double length, double drainLength) computeBpmAndLength(WorkingBeatmap beatmap, osu.Game.Rulesets.Mods.Mod[] mods)
+    private static (double bpm, double baseBpm, double length, double drainLength) computeBpmAndLength(WorkingBeatmap beatmap, osu.Game.Rulesets.Mods.Mod[] mods)
     {
         // BeatmapInfo.BPM is not populated when decoding from raw bytes, so compute from timing points
         double baseBpm = 0;
@@ -300,7 +302,7 @@ public class CalculatorService : Calculator.CalculatorBase
         double moddedLength = playableBeatmap.CalculatePlayableLength() / rate / 1000.0;
         double moddedDrainLength = playableBeatmap.CalculateDrainLength() / rate / 1000.0;
 
-        return (moddedBpm, moddedLength, moddedDrainLength);
+        return (moddedBpm, baseBpm, moddedLength, moddedDrainLength);
     }
 
     private static double getDoubleValue(Dictionary<string, object> dict, params string[] keys)

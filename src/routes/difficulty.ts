@@ -71,6 +71,7 @@ router.post("/", async (req: Request, res: Response) => {
         drainRate: diff.drainRate,
         maxCombo: diff.maxCombo,
         bpm: diff.bpm,
+        baseBpm: diff.baseBpm,
         length: diff.length,
         drainLength: diff.drainLength,
         attributes: diff.attributes
