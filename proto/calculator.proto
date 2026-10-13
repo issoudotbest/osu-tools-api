@@ -63,6 +63,8 @@ message PerformanceRequest {
   int32 droplets = 16;              // For catch
   int64 legacy_total_score = 17;
   string precalculated_difficulty = 18; // JSON-serialized DifficultyAttributes; skips difficulty calc if set
+  int32 large_tick_hits = 19;         // Optional, osu!: slider tick/repeat hits; overrides large_tick_misses when set
+  int32 slider_tail_hits = 20;       // Optional, osu!: slider tail hits; overrides slider_tail_misses when set
 }
 
 message PerformanceResponse {

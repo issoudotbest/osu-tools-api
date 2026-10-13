@@ -153,7 +153,9 @@ public class CalculatorService : Calculator.CalculatorBase
                 request.LargeTickMisses,
                 request.SliderTailMisses,
                 request.TinyDroplets > 0 ? request.TinyDroplets : null,
-                request.Droplets > 0 ? request.Droplets : null
+                request.Droplets > 0 ? request.Droplets : null,
+                request.LargeTickHits > 0 ? request.LargeTickHits : null,
+                request.SliderTailHits > 0 ? request.SliderTailHits : null
             );
 
             var accuracy = HitResultGenerator.GetAccuracy(ruleset, playableBeatmap, statistics, mods);

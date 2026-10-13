@@ -163,7 +163,9 @@ describe("POST /api/performance", () => {
                 accuracy: 98,
                 misses: 5,
                 combo: 450,
-                percentCombo: 90
+                percentCombo: 90,
+                largeTickHits: 12,
+                sliderTailHits: 3
             })
 
         expect(mockCalculatePerformance).toHaveBeenCalledWith(
@@ -171,7 +173,9 @@ describe("POST /api/performance", () => {
                 accuracy: 98,
                 misses: 5,
                 combo: 450,
-                percentCombo: 90
+                percentCombo: 90,
+                largeTickHits: 12,
+                sliderTailHits: 3
             })
         )
     })

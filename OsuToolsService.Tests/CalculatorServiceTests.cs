@@ -830,6 +830,100 @@ public class CalculatorServiceTests
         }
     }
 
+    // === Tick hit inputs tests ===
+
+    private static (int totalLargeTicks, int totalSliderEnds) countOsuSliderTargets(IBeatmap beatmap)
+    {
+        int totalLargeTicks = 0;
+        int totalSliderEnds = 0;
+
+        foreach (var hitObject in beatmap.HitObjects)
+        {
+            if (hitObject is osu.Game.Rulesets.Osu.Objects.Slider)
+                totalSliderEnds++;
+
+            foreach (var nested in hitObject.NestedHitObjects)
+            {
+                if (nested is osu.Game.Rulesets.Osu.Objects.SliderTick or osu.Game.Rulesets.Osu.Objects.SliderRepeat)
+                    totalLargeTicks++;
+            }
+        }
+
+        return (totalLargeTicks, totalSliderEnds);
+    }
+
+    [Fact]
+    public void HitResultGenerator_Osu_TickHits_TakePriorityOverMisses()
+    {
+        var data = getBeatmapData("osu.osu");
+        var wb = new MemoryWorkingBeatmap(data);
+        var ruleset = new OsuRuleset();
+        var mods = Array.Empty<osu.Game.Rulesets.Mods.Mod>();
+        var playableBeatmap = wb.GetPlayableBeatmap(ruleset.RulesetInfo, mods);
+
+        var (totalLargeTicks, totalSliderEnds) = countOsuSliderTargets(playableBeatmap);
+        Assert.True(totalLargeTicks > 0);
+        Assert.True(totalSliderEnds > 0);
+
+        // Miss counts are also supplied but must be ignored when hits are set
+        var stats = HitResultGenerator.Generate(
+            ruleset, playableBeatmap, mods,
+            accuracy: 100, misses: 0,
+            mehs: null, goods: null, oks: null, greats: null,
+            largeTickMisses: 999, sliderTailMisses: 999,
+            tinyDroplets: null, droplets: null,
+            largeTickHits: 5, sliderTailHits: 2
+        );
+
+        Assert.Equal(5, stats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickHit));
+        Assert.Equal(totalLargeTicks - 5, stats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickMiss));
+        Assert.Equal(2, stats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.SliderTailHit));
+
+        foreach (var kvp in stats)
+        {
+            Assert.True(kvp.Value >= 0, $"HitResult {kvp.Key} was {kvp.Value}, should be >= 0");
+        }
+
+        // Oversized hit counts are clamped to the map's totals
+        var clampedStats = HitResultGenerator.Generate(
+            ruleset, playableBeatmap, mods,
+            accuracy: 100, misses: 0,
+            mehs: null, goods: null, oks: null, greats: null,
+            largeTickMisses: 0, sliderTailMisses: 0,
+            tinyDroplets: null, droplets: null,
+            largeTickHits: int.MaxValue, sliderTailHits: int.MaxValue
+        );
+
+        Assert.Equal(totalLargeTicks, clampedStats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickHit));
+        Assert.Equal(0, clampedStats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickMiss));
+        Assert.Equal(totalSliderEnds, clampedStats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.SliderTailHit));
+    }
+
+    [Fact]
+    public void HitResultGenerator_Osu_TickMisses_StillWorkWithoutHits()
+    {
+        var data = getBeatmapData("osu.osu");
+        var wb = new MemoryWorkingBeatmap(data);
+        var ruleset = new OsuRuleset();
+        var mods = Array.Empty<osu.Game.Rulesets.Mods.Mod>();
+        var playableBeatmap = wb.GetPlayableBeatmap(ruleset.RulesetInfo, mods);
+
+        var (totalLargeTicks, totalSliderEnds) = countOsuSliderTargets(playableBeatmap);
+
+        // Hits not supplied: miss counts keep their pre-existing semantics
+        var stats = HitResultGenerator.Generate(
+            ruleset, playableBeatmap, mods,
+            accuracy: 100, misses: 0,
+            mehs: null, goods: null, oks: null, greats: null,
+            largeTickMisses: 2, sliderTailMisses: 1,
+            tinyDroplets: null, droplets: null
+        );
+
+        Assert.Equal(2, stats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickMiss));
+        Assert.Equal(totalLargeTicks - 2, stats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.LargeTickHit));
+        Assert.Equal(totalSliderEnds - 1, stats.GetValueOrDefault(osu.Game.Rulesets.Scoring.HitResult.SliderTailHit));
+    }
+
     [Fact]
     public void PerformanceCalculation_WithPrecalculatedDifficulty_MatchesDirectCalc()
     {

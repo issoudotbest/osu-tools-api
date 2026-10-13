@@ -256,7 +256,7 @@ export function calculateDifficulty(req: { beatmapData: Buffer; rulesetId: numbe
  * @param req Beatmap data, ruleset, mods, and score parameters (accuracy, misses, combo, etc.).
  * @returns The performance result with difficulty, score statistics, and PP breakdown, or an error if the call fails.
  */
-export function calculatePerformance(req: { beatmapData: Buffer; rulesetId: number; mods: Mod[]; accuracy: number; misses: number; mehs?: number; goods?: number; oks?: number; greats?: number; combo?: number; percentCombo: number; largeTickMisses: number; sliderTailMisses: number; tinyDroplets?: number; droplets?: number; legacyTotalScore?: number; precalculatedDifficulty?: string }): Promise<ServiceResult<PerformanceResult>> {
+export function calculatePerformance(req: { beatmapData: Buffer; rulesetId: number; mods: Mod[]; accuracy: number; misses: number; mehs?: number; goods?: number; oks?: number; greats?: number; combo?: number; percentCombo: number; largeTickMisses: number; sliderTailMisses: number; largeTickHits?: number; sliderTailHits?: number; tinyDroplets?: number; droplets?: number; legacyTotalScore?: number; precalculatedDifficulty?: string }): Promise<ServiceResult<PerformanceResult>> {
     return callGrpc<PerformanceResult, PerformanceResponse__Output>(
         "CalculatePerformance",
         (client, options, cb) =>
@@ -275,6 +275,8 @@ export function calculatePerformance(req: { beatmapData: Buffer; rulesetId: numb
                     percentCombo: req.percentCombo,
                     largeTickMisses: req.largeTickMisses,
                     sliderTailMisses: req.sliderTailMisses,
+                    largeTickHits: req.largeTickHits ?? 0,
+                    sliderTailHits: req.sliderTailHits ?? 0,
                     tinyDroplets: req.tinyDroplets ?? 0,
                     droplets: req.droplets ?? 0,
                     legacyTotalScore: req.legacyTotalScore ?? 0,

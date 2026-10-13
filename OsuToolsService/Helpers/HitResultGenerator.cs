@@ -26,11 +26,11 @@ public static class HitResultGenerator
 {
     public static Dictionary<HitResult, int> Generate(Ruleset ruleset, IBeatmap beatmap, Mod[] mods, double accuracy, int misses,
         int? mehs, int? goods, int? oks, int? greats, int largeTickMisses, int sliderTailMisses,
-        int? tinyDroplets, int? droplets)
+        int? tinyDroplets, int? droplets, int? largeTickHits = null, int? sliderTailHits = null)
     {
         return ruleset switch
         {
-            OsuRuleset => generateOsu(beatmap, mods, accuracy / 100, misses, mehs, goods, largeTickMisses, sliderTailMisses),
+            OsuRuleset => generateOsu(beatmap, mods, accuracy / 100, misses, mehs, goods, largeTickMisses, sliderTailMisses, largeTickHits, sliderTailHits),
             TaikoRuleset => generateTaiko(beatmap, accuracy / 100, misses, goods),
             CatchRuleset => generateCatch(beatmap, accuracy / 100, misses, tinyDroplets, droplets),
             ManiaRuleset => generateMania(beatmap, mods, accuracy / 100, misses, mehs, oks, goods, greats),
@@ -53,7 +53,8 @@ public static class HitResultGenerator
     // === osu! standard ===
 
     private static Dictionary<HitResult, int> generateOsu(IBeatmap beatmap, Mod[] mods, double accuracy, int countMiss,
-        int? countMeh, int? countGood, int? countLargeTickMisses, int? countSliderTailMisses)
+        int? countMeh, int? countGood, int? countLargeTickMisses, int? countSliderTailMisses,
+        int? countLargeTickHits = null, int? countSliderTailHits = null)
     {
         int totalResultCount = beatmap.HitObjects.Count;
 
@@ -83,8 +84,13 @@ public static class HitResultGenerator
                 }
             }
 
-            largeTickMisses = Math.Clamp(countLargeTickMisses ?? 0, 0, totalLargeTicks);
-            sliderTailMisses = Math.Clamp(countSliderTailMisses ?? 0, 0, totalSliderEnds);
+            // Hit counts take priority over miss counts when both are supplied
+            largeTickMisses = countLargeTickHits.HasValue
+                ? totalLargeTicks - Math.Clamp(countLargeTickHits.Value, 0, totalLargeTicks)
+                : Math.Clamp(countLargeTickMisses ?? 0, 0, totalLargeTicks);
+            sliderTailMisses = countSliderTailHits.HasValue
+                ? totalSliderEnds - Math.Clamp(countSliderTailHits.Value, 0, totalSliderEnds)
+                : Math.Clamp(countSliderTailMisses ?? 0, 0, totalSliderEnds);
 
             if (countMeh == null && countGood == null)
             {

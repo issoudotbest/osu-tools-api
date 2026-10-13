@@ -141,6 +141,8 @@ Calculates performance (PP) for a score on a beatmap.
 | `percentCombo`            | `number`  | `100`        | Percentage of max combo (0-100). Used if `combo` is not set.                                                   |
 | `largeTickMisses`         | `number`  | `0`          | Large tick misses (osu!).                                                                                      |
 | `sliderTailMisses`        | `number`  | `0`          | Slider tail misses (osu!).                                                                                     |
+| `largeTickHits`           | `number?` | —            | Slider tick/repeat hits (osu!). Takes priority over `largeTickMisses`.                                         |
+| `sliderTailHits`          | `number?` | —            | Slider tail hits (osu!). Takes priority over `sliderTailMisses`.                                                |
 | `tinyDroplets`            | `number?` | —            | Tiny droplet count (catch).                                                                                    |
 | `droplets`                | `number?` | —            | Droplet count (catch).                                                                                         |
 | `legacyTotalScore`        | `number?` | —            | Legacy total score (for score-based PP).                                                                       |
