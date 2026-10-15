@@ -13,7 +13,8 @@ jest.mock("../../src/config", () => ({
         auth: { api_keys: ["test"] },
         general: { mode: "development", public_api_port: 3000, private_api_port: 3001, api_prefix: "/api", grpc_socket_path: "/tmp/test.sock", reqs_per_min: 60 },
         cache: { path: "./cache", ttl_days: mockTtlDays },
-        urls: { webhook: "", webhook_token: "", loki: "" }
+        webhook: { url: "", token: "" },
+        loki: { url: "", labels: {} }
     }),
     createLogger: () => ({
         fatal: jest.fn(),

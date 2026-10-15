@@ -38,7 +38,8 @@ if (!existsSync(testConfigPath)) {
                         reqs_per_min: 60
                     },
                     cache: { path: "./cache", ttl_days: 1 },
-                    urls: { webhook: "", webhook_token: "", loki: "" }
+                    webhook: { url: "", token: "" },
+                    loki: { url: "", labels: {} }
                 },
                 null,
                 4

@@ -55,9 +55,10 @@ Configuration is loaded from `config.json` at the project root. Copy `config-exa
 | `general.reqs_per_min`     | `number`                          | `60`                         | Rate limit per minute per IP.                                    |
 | `cache.path`               | `string`                          | `"./cache"`                  | Directory for cached beatmap files.                              |
 | `cache.ttl_days`           | `number`                          | `1`                          | Cache TTL in days. Set to `0` to disable caching entirely.       |
-| `urls.webhook`             | `string`                          | `""`                         | Webhook URL for error/fatal notifications. Empty disables.       |
-| `urls.webhook_token`       | `string`                          | `""`                         | Authorization header value for webhook. Empty sends no header.   |
-| `urls.loki`                | `string`                          | `""`                         | Grafana Loki URL for log shipping. Empty disables.               |
+| `webhook.url`              | `string`                          | `""`                         | Webhook URL for error/fatal notifications. Empty disables.       |
+| `webhook.token`            | `string`                          | `""`                         | Authorization header value for webhook. Empty sends no header.   |
+| `loki.url`                 | `string`                          | `""`                         | Grafana Loki URL for log shipping. Empty disables.               |
+| `loki.labels`             | `Record<string, string>`          | `{}`                         | Custom labels added to every log stream sent to Loki (e.g. `instance` to distinguish multiple osu-tools-api deployments). |
 
 ## API
 

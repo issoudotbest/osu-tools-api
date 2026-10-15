@@ -21,11 +21,18 @@ export const ConfigSchema = z.object({
         path: z.string().default("./cache"),
         ttl_days: z.number().min(0).default(1)
     }),
-    urls: z.object({
-        webhook: z.union([z.url(), z.literal("")]).default(""),
-        webhook_token: z.string().default(""),
-        loki: z.union([z.url(), z.literal("")]).default("")
-    })
+    webhook: z
+        .object({
+            url: z.union([z.url(), z.literal("")]).default(""),
+            token: z.string().default("")
+        })
+        .prefault({}),
+    loki: z
+        .object({
+            url: z.union([z.url(), z.literal("")]).default(""),
+            labels: z.record(z.string(), z.string()).default({})
+        })
+        .prefault({})
 })
 type Config = z.infer<typeof ConfigSchema>
 
@@ -66,9 +73,10 @@ export function createLogger(module: string, submodule?: string): Logger {
         {
             name: "osu-tools-api",
             mode: config.general.mode,
-            webhookUrl: config.urls.webhook || undefined,
-            webhookToken: config.urls.webhook_token || undefined,
-            lokiUrl: config.urls.loki || undefined
+            webhookUrl: config.webhook.url || undefined,
+            webhookToken: config.webhook.token || undefined,
+            lokiUrl: config.loki.url || undefined,
+            lokiLabels: config.loki.labels
         },
         module,
         submodule

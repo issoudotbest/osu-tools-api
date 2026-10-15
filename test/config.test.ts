@@ -8,8 +8,7 @@ describe("Config schema validation", () => {
         const result = ConfigSchema.safeParse({
             auth: { api_keys: ["key"] },
             general: { mode: "development" },
-            cache: {},
-            urls: {}
+            cache: {}
         })
 
         expect(result.success).toBe(true)
@@ -21,9 +20,10 @@ describe("Config schema validation", () => {
             expect(result.data.general.reqs_per_min).toBe(60)
             expect(result.data.cache.path).toBe("./cache")
             expect(result.data.cache.ttl_days).toBe(1)
-            expect(result.data.urls.webhook).toBe("")
-            expect(result.data.urls.webhook_token).toBe("")
-            expect(result.data.urls.loki).toBe("")
+            expect(result.data.webhook.url).toBe("")
+            expect(result.data.webhook.token).toBe("")
+            expect(result.data.loki.url).toBe("")
+            expect(result.data.loki.labels).toEqual({})
         }
     })
 
@@ -31,8 +31,7 @@ describe("Config schema validation", () => {
         const result = ConfigSchema.safeParse({
             auth: { api_keys: ["key"] },
             general: { mode: "development", reqs_per_min: 120 },
-            cache: {},
-            urls: {}
+            cache: {}
         })
 
         expect(result.success).toBe(true)
@@ -43,8 +42,8 @@ describe("Config schema validation", () => {
 
     test("rejects invalid configs", () => {
         const invalid = [
-            { auth: { api_keys: ["key"] }, general: { mode: "invalid_mode" }, cache: {}, urls: {} },
-            { auth: { api_keys: ["key"] }, general: { mode: "development", public_api_port: 99999 }, cache: {}, urls: {} }
+            { auth: { api_keys: ["key"] }, general: { mode: "invalid_mode" }, cache: {} },
+            { auth: { api_keys: ["key"] }, general: { mode: "development", public_api_port: 99999 }, cache: {} }
         ]
 
         for (const config of invalid) {
@@ -56,8 +55,7 @@ describe("Config schema validation", () => {
         const result = ConfigSchema.safeParse({
             auth: { api_keys: [] },
             general: { mode: "development" },
-            cache: {},
-            urls: {}
+            cache: {}
         })
 
         expect(result.success).toBe(true)

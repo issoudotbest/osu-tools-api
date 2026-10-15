@@ -37,6 +37,7 @@ export interface ILoggerConfig {
     webhookUrl?: string
     webhookToken?: string
     lokiUrl?: string
+    lokiLabels?: Record<string, string>
 }
 
 const LOG_LEVELS = {
@@ -147,7 +148,7 @@ export default class Logger {
         }
 
         this.winstonLogger = winston.createLogger({
-            defaultMeta: { module, submoduleFirst: submodule, service: config.name, mode: config.mode },
+            defaultMeta: { module, submoduleFirst: submodule, service: config.name, mode: config.mode, ...config.lokiLabels },
             levels: LOG_LEVELS,
             transports,
             format: winston.format.combine(winston.format.timestamp()),

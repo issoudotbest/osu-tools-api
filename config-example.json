@@ -14,9 +14,14 @@
         "path": "./cache",
         "ttl_days": 1
     },
-    "urls": {
-        "webhook": "",
-        "webhook_token": "",
-        "loki": ""
+    "webhook": {
+        "url": "",
+        "token": ""
+    },
+    "loki": {
+        "url": "",
+        "labels": {
+            "instance": "01"
+        }
     }
 }
