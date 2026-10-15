@@ -96,7 +96,7 @@ async function downloadBeatmap(beatmapId: number, config: ReturnType<typeof getC
 
             const body = Buffer.from(await response.body.arrayBuffer())
 
-            if (!body.toString("latin1").startsWith("osu file format v")) {
+            if (!isBeatmapContent(body)) {
                 lastError = "Beatmap not found or invalid"
                 logger.warn({ message: `Beatmap ${beatmapId}: ${sourceName} returned invalid content (${body.length} bytes)` })
                 continue
@@ -138,4 +138,16 @@ export function clearMemoryCache(beatmapId?: number) {
     } else {
         memoryCache.flushAll()
     }
+}
+
+/**
+ * Validates that the downloaded content is a .osu beatmap file.
+ * Basically same tolerance as osu!, this accepts a UTF-8 BOM, leading blank lines and whitespaces before the "osu file format v" header.
+ */
+function isBeatmapContent(body: Buffer): boolean {
+    let text = body.toString("utf8")
+    if (text.startsWith("\uFEFF")) text = text.slice(1)
+
+    const firstLine = text.split(/\r?\n/).find(line => line.trim().length > 0)
+    return (firstLine?.trim() ?? "").startsWith("osu file format v")
 }

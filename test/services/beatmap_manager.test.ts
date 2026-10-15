@@ -41,6 +41,8 @@ describe("Beatmap manager", () => {
     const clearCacheTestId = 66666
     const noDiskCacheTestId = 77777
     const dedupTestId = 88888
+    const bomTestId = 99999
+    const blankLinesTestId = 121212
 
     beforeEach(() => {
         jest.clearAllMocks()
@@ -51,7 +53,7 @@ describe("Beatmap manager", () => {
     afterEach(() => {
         // Clean up any downloaded cache files
         const cacheDir = "./cache"
-        const testIds: number[] = [downloadTestId, errorTestId, networkFailId, fallbackTestId, cacheHitTestId, clearCacheTestId, noDiskCacheTestId, dedupTestId]
+        const testIds: number[] = [downloadTestId, errorTestId, networkFailId, fallbackTestId, cacheHitTestId, clearCacheTestId, noDiskCacheTestId, dedupTestId, bomTestId, blankLinesTestId]
         testIds.forEach((id: number) => {
             const f = path.join(cacheDir, `${id}.osu`)
             if (existsSync(f)) {
@@ -250,6 +252,47 @@ describe("Beatmap manager", () => {
         expect(result1.ok).toBe(true)
         expect(result2.ok).toBe(true)
         // Only one download should have happened
+        expect(mockedRequest).toHaveBeenCalledTimes(1)
+    })
+
+    test("accepts beatmaps served with a UTF-8 BOM prefix", async () => {
+        // Some beatmap files carry a UTF-8 BOM before the header,
+        const fakeData = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from("osu file format v14\r\n")])
+        mockedRequest.mockResolvedValue({
+            statusCode: 200,
+            body: {
+                arrayBuffer: async () => fakeData.buffer.slice(fakeData.byteOffset, fakeData.byteOffset + fakeData.byteLength),
+                text: async () => fakeData.toString()
+            }
+        } as any)
+
+        const result = await getBeatmapData(bomTestId)
+
+        expect(result.ok).toBe(true)
+        if (result.ok) {
+            expect(result.data).toEqual(fakeData)
+        }
+        // Should not have fallen through to the second source
+        expect(mockedRequest).toHaveBeenCalledTimes(1)
+    })
+
+    test("accepts beatmaps with leading blank lines or whitespace before the header", async () => {
+        // The downstream osu! decoder skips blank lines and trims the header line
+        const fakeData = Buffer.from("\r\n  \r\n osu file format v14 \r\n[General]\r\nAudioFilename: a.mp3\r\n")
+        mockedRequest.mockResolvedValue({
+            statusCode: 200,
+            body: {
+                arrayBuffer: async () => fakeData.buffer.slice(fakeData.byteOffset, fakeData.byteOffset + fakeData.byteLength),
+                text: async () => fakeData.toString()
+            }
+        } as any)
+
+        const result = await getBeatmapData(blankLinesTestId)
+
+        expect(result.ok).toBe(true)
+        if (result.ok) {
+            expect(result.data).toEqual(fakeData)
+        }
         expect(mockedRequest).toHaveBeenCalledTimes(1)
     })
 })
