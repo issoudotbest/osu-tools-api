@@ -1,4 +1,4 @@
-import { existsSync, copyFileSync, writeFileSync, readFileSync } from "fs"
+import { existsSync, copyFileSync, writeFileSync, readFileSync, renameSync } from "fs"
 import { join } from "path"
 
 const TEST_API_KEY = "test-api-key"
@@ -10,11 +10,21 @@ const examplePath = join(process.cwd(), "config-example.json")
 // Point config.ts at our test config before any test module imports it
 process.env.CONFIG_PATH = testConfigPath
 
+// Jest runs this setup in every worker, so writes must not be observable half-done:
+// write to a unique temp file, then rename (atomic on POSIX)
+function atomicWrite(targetPath: string, content: string) {
+    const tmpPath = `${targetPath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
+    writeFileSync(tmpPath, content)
+    renameSync(tmpPath, targetPath)
+}
+
 if (!existsSync(testConfigPath)) {
     if (existsSync(examplePath)) {
-        copyFileSync(examplePath, testConfigPath)
+        const tmpPath = `${testConfigPath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
+        copyFileSync(examplePath, tmpPath)
+        renameSync(tmpPath, testConfigPath)
     } else {
-        writeFileSync(
+        atomicWrite(
             testConfigPath,
             JSON.stringify(
                 {
@@ -43,4 +53,9 @@ if (!config.auth.api_keys.includes(TEST_API_KEY)) {
     config.auth.api_keys.push(TEST_API_KEY)
 }
 config.general.api_prefix = "/api"
-writeFileSync(testConfigPath, JSON.stringify(config, null, 4))
+
+const serialized = JSON.stringify(config, null, 4)
+// All workers compute identical content; skip the write when it's already correct
+if (serialized !== readFileSync(testConfigPath, "utf-8")) {
+    atomicWrite(testConfigPath, serialized)
+}
